@@ -351,6 +351,10 @@
         .channel-icon.revleads { background: #ec4899; }
         .channel-icon.selectsoftware { background: #f59e0b; }
         .channel-icon.email { background: #6366f1; }
+        .channel-icon.capterracpl { background: #ff6d00; }
+        .channel-icon.outboundmql { background: #10b981; }
+        .channel-icon.outboundcold { background: #14b8a6; }
+        .channel-icon.affiliate { background: #8b5cf6; }
 
         .channel-name { font-weight: 500; color: var(--text-primary); }
 
@@ -599,7 +603,7 @@
                     });
                 });
 
-                // Second group: rows 38+ (Microsoft, YouTube, Capterra, RevLeads, Select Software)
+                // Second group: rows 38+ (Microsoft, YouTube, Capterra CPC, RevLeads, Select Software)
                 const group2Channels = ['Microsoft Display Ads', 'YouTube Ads', 'Capterra CPC', 'RevLeads CPC', 'Select Software Reviews'];
                 const group2Icons = ['microsoft', 'youtube', 'capterra', 'revleads', 'selectsoftware'];
                 const group2Shorts = ['M', '▶', 'C', 'R', 'S'];
@@ -617,6 +621,27 @@
                         dealPoints: parseValue(rows[42]?.[colOffset]),
                         generatedMRR: parseValue(rows[47]?.[colOffset]),
                         closedMRR: parseValue(rows[48]?.[colOffset])
+                    });
+                });
+
+                // Third group: rows 58+ (Forbes CPL, Capterra CPL, Outbound MQL, Outbound Cold, Affiliate, Email)
+                const group3Channels = ['Forbes CPL', 'Capterra CPL', 'Outbound - MQL Data', 'Outbound - Cold Data', 'Affiliate', 'Email'];
+                const group3Icons = ['forbes', 'capterracpl', 'outboundmql', 'outboundcold', 'affiliate', 'email'];
+                const group3Shorts = ['F', 'C', 'M', 'O', 'A', 'E'];
+                
+                group3Channels.forEach((name, idx) => {
+                    const colOffset = idx * 3 + 3;
+                    channels.push({
+                        name,
+                        icon: group3Icons[idx],
+                        short: group3Shorts[idx],
+                        spend: parseValue(rows[58]?.[colOffset]),
+                        accounts: parseValue(rows[59]?.[colOffset]),
+                        demos: parseValue(rows[60]?.[colOffset]),
+                        deals: parseValue(rows[61]?.[colOffset]),
+                        dealPoints: parseValue(rows[62]?.[colOffset]),
+                        generatedMRR: parseValue(rows[67]?.[colOffset]),
+                        closedMRR: parseValue(rows[68]?.[colOffset])
                     });
                 });
 
