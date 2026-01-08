@@ -285,6 +285,9 @@
         .summary-icon.mrr { background: #ecfdf5; color: #047857; }
         .summary-icon.closedmrr { background: #d1fae5; color: #059669; }
         .summary-icon.cpa { background: #e0f2fe; color: #0284c7; }
+        .summary-icon.cpaccount { background: #f0f9ff; color: #0369a1; }
+        .summary-icon.cpdeal { background: #fdf4ff; color: #a21caf; }
+        .summary-icon.cpdealpt { background: #fefce8; color: #a16207; }
         .summary-icon.directconv { background: #fff7ed; color: #ea580c; }
         .summary-icon.directmrr { background: #fef9c3; color: #ca8a04; }
         .summary-icon.directdp { background: #f0fdf4; color: #16a34a; }
@@ -1024,7 +1027,10 @@
                 );
             }
 
+            const costPerAccount = displaySummary.accounts > 0 ? displaySummary.spend / displaySummary.accounts : 0;
             const costPerDemo = displaySummary.demos > 0 ? displaySummary.spend / displaySummary.demos : 0;
+            const costPerDeal = displaySummary.deals > 0 ? displaySummary.spend / displaySummary.deals : 0;
+            const costPerDealPoint = displaySummary.dealPoints > 0 ? displaySummary.spend / displaySummary.dealPoints : 0;
 
             return (
                 <div className="layout">
@@ -1116,7 +1122,7 @@
                             <div className="summary-grid">
                                 <div className="summary-card">
                                     <div className="summary-icon spend">{Icons.dollar}</div>
-                                    <div className="summary-label">Total Spend</div>
+                                    <div className="summary-label">Spend</div>
                                     <div className="summary-value">{formatCurrency(displaySummary.spend)}</div>
                                 </div>
                                 <div className="summary-card">
@@ -1138,6 +1144,26 @@
                                     <div className="summary-icon dealpoints">{Icons.star}</div>
                                     <div className="summary-label">Deal Points</div>
                                     <div className="summary-value">{formatNumber(displaySummary.dealPoints)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon cpaccount">{Icons.percent}</div>
+                                    <div className="summary-label">Cost Per Account</div>
+                                    <div className="summary-value">{formatCurrency(costPerAccount)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon cpa">{Icons.percent}</div>
+                                    <div className="summary-label">Cost Per Demo</div>
+                                    <div className="summary-value">{formatCurrency(costPerDemo)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon cpdeal">{Icons.percent}</div>
+                                    <div className="summary-label">Cost Per Deal</div>
+                                    <div className="summary-value">{formatCurrency(costPerDeal)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon cpdealpt">{Icons.percent}</div>
+                                    <div className="summary-label">Cost Per Deal Point</div>
+                                    <div className="summary-value">{formatCurrency(costPerDealPoint)}</div>
                                 </div>
                                 <div className="summary-card">
                                     <div className="summary-icon mrr">{Icons.trending}</div>
@@ -1163,11 +1189,6 @@
                                     <div className="summary-icon directdp">{Icons.star}</div>
                                     <div className="summary-label">Direct Conv. Deal Pts</div>
                                     <div className="summary-value">{formatNumber(displaySummary.directConversionsDealPoints)}</div>
-                                </div>
-                                <div className="summary-card">
-                                    <div className="summary-icon cpa">{Icons.percent}</div>
-                                    <div className="summary-label">Cost Per Demo</div>
-                                    <div className="summary-value">{formatCurrency(costPerDemo)}</div>
                                 </div>
                             </div>
 
@@ -1216,21 +1237,23 @@
                                             <th onClick={() => handleSort('demos')}>Demos</th>
                                             <th onClick={() => handleSort('deals')}>Deals</th>
                                             <th onClick={() => handleSort('dealPoints')}>Deal Pts</th>
+                                            <th>CPA</th>
+                                            <th>CPD</th>
+                                            <th>CP Deal</th>
+                                            <th>CP DP</th>
                                             <th onClick={() => handleSort('generatedMRR')}>Gen. MRR</th>
                                             <th onClick={() => handleSort('closedMRR')}>Closed MRR</th>
                                             <th onClick={() => handleSort('directConversions')}>Dir. Conv</th>
                                             <th onClick={() => handleSort('directConversionsMRR')}>Dir. MRR</th>
                                             <th onClick={() => handleSort('directConversionsDealPoints')}>Dir. DP</th>
-                                            <th onClick={() => handleSort('clicks')}>Clicks</th>
-                                            <th onClick={() => handleSort('impressions')}>Impr.</th>
-                                            <th onClick={() => handleSort('cpc')}>CPC</th>
-                                            <th onClick={() => handleSort('ctr')}>CTR</th>
-                                            <th>CPD</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredChannels.map((channel, idx) => {
+                                            const cpa = channel.accounts > 0 ? channel.spend / channel.accounts : 0;
                                             const cpd = channel.demos > 0 ? channel.spend / channel.demos : 0;
+                                            const cpDeal = channel.deals > 0 ? channel.spend / channel.deals : 0;
+                                            const cpDealPt = channel.dealPoints > 0 ? channel.spend / channel.dealPoints : 0;
                                             return (
                                                 <tr key={idx}>
                                                     <td>
@@ -1244,16 +1267,15 @@
                                                     <td>{formatNumber(channel.demos)}</td>
                                                     <td>{formatNumber(channel.deals)}</td>
                                                     <td>{formatNumber(channel.dealPoints)}</td>
+                                                    <td>{cpa > 0 ? formatCurrency(cpa) : '—'}</td>
+                                                    <td>{cpd > 0 ? formatCurrency(cpd) : '—'}</td>
+                                                    <td>{cpDeal > 0 ? formatCurrency(cpDeal) : '—'}</td>
+                                                    <td>{cpDealPt > 0 ? formatCurrency(cpDealPt) : '—'}</td>
                                                     <td>{formatCurrency(channel.generatedMRR)}</td>
                                                     <td>{formatCurrency(channel.closedMRR)}</td>
                                                     <td>{formatNumber(channel.directConversions)}</td>
                                                     <td>{formatCurrency(channel.directConversionsMRR)}</td>
                                                     <td>{formatNumber(channel.directConversionsDealPoints)}</td>
-                                                    <td>{formatNumber(channel.clicks)}</td>
-                                                    <td>{formatNumber(channel.impressions)}</td>
-                                                    <td>{channel.cpc > 0 ? formatCurrency(channel.cpc) : '—'}</td>
-                                                    <td>{channel.ctr > 0 ? (channel.ctr * 100).toFixed(2) + '%' : '—'}</td>
-                                                    <td>{cpd > 0 ? formatCurrency(cpd) : '—'}</td>
                                                 </tr>
                                             );
                                         })}
