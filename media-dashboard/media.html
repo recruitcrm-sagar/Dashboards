@@ -1275,8 +1275,7 @@
                         <div className="topbar">
                             <div className="page-title">{PODS.find(p => p.key === selectedPod)?.label} — {selectedMonth} 2026</div>
                             <div className="topbar-right">
-                                <button className="btn btn-secondary">{Icons.download} Export</button>
-                                <button className={`btn-icon ${refreshing ? 'spinning' : ''}`} onClick={fetchAllData} disabled={refreshing}>
+                                <button className={`btn-icon ${refreshing ? 'spinning' : ''}`} onClick={() => fetchAllData(selectedPod)} disabled={refreshing} title="Refresh data">
                                     {Icons.refresh}
                                 </button>
                             </div>
