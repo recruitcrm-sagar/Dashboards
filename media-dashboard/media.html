@@ -802,6 +802,67 @@
             text-transform: uppercase;
         }
 
+        /* Outbound Section Styles */
+        .outbound-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .outbound-stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .outbound-stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .outbound-stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .outbound-stat-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .outbound-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .outbound-stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .outbound-stat-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding-top: 4px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 4px;
+        }
+
         /* Weekly Cards */
         .weekly-grid {
             display: grid;
@@ -1031,6 +1092,7 @@
             dollar: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
             users: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>,
             calendar: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>,
+            phone: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>,
             target: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
             trending: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>,
             percent: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
@@ -1360,119 +1422,149 @@
 
             // Process Outbound Pod sheet data (independent structure)
             // Based on: https://docs.google.com/spreadsheets/d/1bRp9hnQdOnppaoK6WsPdzYj2XeedO1G5TQ4iqJcIWlQ
+            // Tab: January 2026
+            // Structure:
+            // Row 1: SDR Names - Akanksha(B), Vanshita(C), Samriddhi(D), Rashi(E), AI SDR(F), TOTAL(G)
+            // Row 2-14: Summary metrics
+            // Row 16+: Individual SDR weekly data
             const processOutboundData = (rows, month) => {
-                if (!rows || rows.length === 0) return getEmptyData(month);
+                if (!rows || rows.length === 0) return getEmptyOutboundData(month);
 
-                // Outbound data structure - different from other pods
-                // Data types: Cold Data, MQL - Capterra, MQL - Social Listening, etc.
-                // This is an independent section - no data flows to other pods
-                
-                // Summary totals
-                const summaryCol = 14; // MTD column
-                const summary = {
-                    spend: parseValue(rows[1]?.[summaryCol]),
-                    accounts: parseValue(rows[2]?.[summaryCol]),
-                    demos: parseValue(rows[3]?.[summaryCol]),
-                    deals: parseValue(rows[4]?.[summaryCol]),
-                    dealPoints: parseValue(rows[5]?.[summaryCol]),
-                    generatedMRR: parseValue(rows[10]?.[summaryCol]),
-                    closedMRR: parseValue(rows[11]?.[summaryCol]),
-                    directConversions: parseValue(rows[12]?.[summaryCol]),
-                    directConversionsMRR: parseValue(rows[13]?.[summaryCol]),
-                    directConversionsDealPoints: parseValue(rows[14]?.[summaryCol])
+                // SDR column mapping (0-indexed)
+                // Row 1: [Label, Akanksha, Vanshita, Samriddhi, Rashi, AI SDR, TOTAL]
+                const SDR_COLS = {
+                    'Akanksha': 1,  // Column B
+                    'Vanshita': 2,  // Column C
+                    'Samriddhi': 3, // Column D
+                    'Rashi': 4,     // Column E
+                    'AI SDR': 5,    // Column F
+                    'TOTAL': 6      // Column G
                 };
 
-                // Weekly data
-                const weeks = WEEKS.map((week, idx) => {
-                    const colOffset = idx * 3 + 2;
+                const SDR_COLORS = {
+                    'Akanksha': '#f59e0b',
+                    'Vanshita': '#667eea',
+                    'Samriddhi': '#ec4899',
+                    'Rashi': '#8b5cf6',
+                    'AI SDR': '#10b981'
+                };
+
+                // Parse team totals from TOTAL column (G = index 6)
+                const totalCol = 6;
+                const teamTotals = {
+                    salesloftCalls: parseValue(rows[1]?.[totalCol]),
+                    salesloftConnected: parseValue(rows[2]?.[totalCol]),
+                    salesloftConnectPercent: rows[3]?.[totalCol] || '0%',
+                    aiCalls: parseValue(rows[4]?.[totalCol]),
+                    aiCallsConnected: parseValue(rows[5]?.[totalCol]),
+                    aiCallsConnectPercent: rows[6]?.[totalCol] || '0%',
+                    totalDemos: parseValue(rows[7]?.[totalCol]),
+                    totalDeals: parseValue(rows[8]?.[totalCol]),
+                    dealsColdData: parseValue(rows[9]?.[totalCol]),
+                    dealsMQLs: parseValue(rows[10]?.[totalCol]),
+                    mrrPipeline: parseValue(rows[11]?.[totalCol]),
+                    closedMRR: parseValue(rows[12]?.[totalCol]),
+                    momMRRIncrease: parseValue(rows[13]?.[totalCol])
+                };
+
+                // Parse individual SDR data
+                const SDR_NAMES = ['Akanksha', 'Vanshita', 'Samriddhi', 'Rashi', 'AI SDR'];
+                const sdrs = SDR_NAMES.map(name => {
+                    const col = SDR_COLS[name];
                     return {
-                        label: week,
-                        dates: WEEK_DATES[week],
-                        spend: parseValue(rows[1]?.[colOffset]),
-                        accounts: parseValue(rows[2]?.[colOffset]),
-                        demos: parseValue(rows[3]?.[colOffset]),
-                        deals: parseValue(rows[4]?.[colOffset]),
-                        dealPoints: parseValue(rows[5]?.[colOffset]),
-                        generatedMRR: parseValue(rows[10]?.[colOffset]),
-                        closedMRR: parseValue(rows[11]?.[colOffset]),
-                        directConversions: parseValue(rows[12]?.[colOffset]),
-                        directConversionsMRR: parseValue(rows[13]?.[colOffset]),
-                        directConversionsDealPoints: parseValue(rows[14]?.[colOffset])
+                        name,
+                        color: SDR_COLORS[name],
+                        salesloftCalls: parseValue(rows[1]?.[col]),
+                        salesloftConnected: parseValue(rows[2]?.[col]),
+                        salesloftConnectPercent: rows[3]?.[col] || '0%',
+                        aiCalls: parseValue(rows[4]?.[col]),
+                        aiCallsConnected: parseValue(rows[5]?.[col]),
+                        aiCallsConnectPercent: rows[6]?.[col] || '0%',
+                        totalDemos: parseValue(rows[7]?.[col]),
+                        totalDeals: parseValue(rows[8]?.[col]),
+                        dealsColdData: parseValue(rows[9]?.[col]),
+                        dealsMQLs: parseValue(rows[10]?.[col]),
+                        mrrPipeline: parseValue(rows[11]?.[col]),
+                        closedMRR: parseValue(rows[12]?.[col])
                     };
                 });
 
-                // Outbound data source channels
-                const channels = [];
-                const outboundChannels = [
-                    'Cold Data',
-                    'MQL - Capterra',
-                    'MQL - Social Listening',
-                    'MQL - Social Media Engaged',
-                    'MQL - Cold Emails',
-                    'MQL - Sign Ups',
-                    'MQL - Subscriber Data',
-                    'MQL - Breakout Leads',
-                    'MQL - Ad Campaign Data',
-                    'MQL - Demo No Show',
-                    'MQL - Demo Dropoff'
-                ];
-                const outboundIcons = ['colddata', 'capterra', 'sociallistening', 'socialmedia', 'coldemails', 'signups', 'subscriber', 'breakout', 'adcampaign', 'noshow', 'dropoff'];
-                const outboundShorts = ['CD', 'CT', 'SL', 'SM', 'CE', 'SU', 'SD', 'BL', 'AC', 'NS', 'DO'];
-                
-                outboundChannels.forEach((name, idx) => {
-                    const colOffset = idx * 3 + 2;
-                    channels.push({
-                        name,
-                        icon: outboundIcons[idx],
-                        short: outboundShorts[idx],
-                        spend: parseValue(rows[18]?.[colOffset]),
-                        accounts: parseValue(rows[19]?.[colOffset]),
-                        demos: parseValue(rows[20]?.[colOffset]),
-                        deals: parseValue(rows[21]?.[colOffset]),
-                        dealPoints: parseValue(rows[22]?.[colOffset]),
-                        generatedMRR: parseValue(rows[27]?.[colOffset]),
-                        closedMRR: parseValue(rows[28]?.[colOffset]),
-                        directConversions: parseValue(rows[29]?.[colOffset]),
-                        directConversionsMRR: parseValue(rows[30]?.[colOffset]),
-                        directConversionsDealPoints: parseValue(rows[31]?.[colOffset]),
-                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                // Parse weekly data for each SDR
+                // AKANKSHA: Rows 16-41, VANSHITA: 44-69, SAMRIDDHI: 72-97, RASHI: 100+, AI SDR: follows
+                const SDR_ROW_STARTS = {
+                    'Akanksha': 15,   // Row 16 (0-indexed: 15)
+                    'Vanshita': 43,   // Row 44
+                    'Samriddhi': 71,  // Row 72
+                    'Rashi': 99,      // Row 100
+                    'AI SDR': 127     // Estimated
+                };
+
+                const sdrWeeklyData = {};
+                SDR_NAMES.forEach(name => {
+                    const startRow = SDR_ROW_STARTS[name];
+                    if (!startRow) return;
+
+                    // Week columns: B=1 (Week 1), C=2 (Week 2), D=3 (Week 3), E=4 (Week 4)
+                    sdrWeeklyData[name] = WEEKS.map((week, weekIdx) => {
+                        const col = weekIdx + 1; // Week 1 in col B (index 1)
+                        return {
+                            label: week,
+                            salesloftCalls: parseValue(rows[startRow + 1]?.[col]),
+                            salesloftConnected: parseValue(rows[startRow + 2]?.[col]),
+                            aiCalls: parseValue(rows[startRow + 4]?.[col]),
+                            aiCallsConnected: parseValue(rows[startRow + 5]?.[col]),
+                            totalDemos: parseValue(rows[startRow + 7]?.[col]),
+                            totalDeals: parseValue(rows[startRow + 8]?.[col]),
+                            mrrPipeline: parseValue(rows[startRow + 11]?.[col]),
+                            closedMRR: parseValue(rows[startRow + 12]?.[col])
+                        };
                     });
                 });
 
-                // SDR names for the Outbound team
-                const SDR_NAMES = ['Vanshita', 'Akanksha', 'AI SDR', 'Samriddhi', 'Rashi'];
-                const SDR_COLORS = ['#667eea', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6'];
-                
-                // Parse SDR data from the sheet
-                const sdrs = SDR_NAMES.map((name, idx) => {
-                    // Look for SDR column - SDRs might be in columns starting from column 2
-                    const colOffset = idx + 2; // Starting from column C (index 2)
-                    
-                    return {
-                        name,
-                        color: SDR_COLORS[idx],
-                        // Summary metrics
-                        demos: parseValue(rows[3]?.[colOffset]),
-                        deals: parseValue(rows[4]?.[colOffset]),
-                        dealPoints: parseValue(rows[5]?.[colOffset]),
-                        accounts: parseValue(rows[2]?.[colOffset]),
-                        generatedMRR: parseValue(rows[10]?.[colOffset]),
-                        closedMRR: parseValue(rows[11]?.[colOffset]),
-                        directConversions: parseValue(rows[12]?.[colOffset]),
-                        directConversionsMRR: parseValue(rows[13]?.[colOffset]),
-                        directConversionsDealPoints: parseValue(rows[14]?.[colOffset]),
-                        // Data source breakdown for this SDR
-                        dataBreakdown: outboundChannels.map((source, srcIdx) => ({
-                            source,
-                            demos: parseValue(rows[20 + srcIdx]?.[colOffset]),
-                            deals: parseValue(rows[32 + srcIdx]?.[colOffset]),
-                            accounts: parseValue(rows[44 + srcIdx]?.[colOffset])
-                        }))
-                    };
+                // Add weekly data to each SDR
+                sdrs.forEach(sdr => {
+                    sdr.weeklyData = sdrWeeklyData[sdr.name] || [];
                 });
 
-                return { summary, weeks, channels, sdrs, month };
+                // Create summary for compatibility with other pods
+                const summary = {
+                    spend: 0,
+                    accounts: 0,
+                    demos: teamTotals.totalDemos,
+                    deals: teamTotals.totalDeals,
+                    dealPoints: 0,
+                    generatedMRR: teamTotals.mrrPipeline,
+                    closedMRR: teamTotals.closedMRR,
+                    directConversions: 0,
+                    directConversionsMRR: 0,
+                    directConversionsDealPoints: 0
+                };
+
+                // Create weekly data for chart compatibility
+                const weeks = WEEKS.map((week, idx) => ({
+                    label: week,
+                    dates: WEEK_DATES[week],
+                    demos: sdrs.reduce((sum, sdr) => sum + (sdr.weeklyData[idx]?.totalDemos || 0), 0),
+                    deals: sdrs.reduce((sum, sdr) => sum + (sdr.weeklyData[idx]?.totalDeals || 0), 0),
+                    mrrPipeline: sdrs.reduce((sum, sdr) => sum + (sdr.weeklyData[idx]?.mrrPipeline || 0), 0),
+                    closedMRR: sdrs.reduce((sum, sdr) => sum + (sdr.weeklyData[idx]?.closedMRR || 0), 0),
+                    salesloftCalls: sdrs.reduce((sum, sdr) => sum + (sdr.weeklyData[idx]?.salesloftCalls || 0), 0),
+                    aiCalls: sdrs.reduce((sum, sdr) => sum + (sdr.weeklyData[idx]?.aiCalls || 0), 0)
+                }));
+
+                return { summary, weeks, channels: [], sdrs, teamTotals, month, isOutbound: true };
             };
+
+            // Empty outbound data
+            const getEmptyOutboundData = (month) => ({
+                summary: { spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 },
+                weeks: WEEKS.map(w => ({ label: w, dates: WEEK_DATES[w], demos: 0, deals: 0, mrrPipeline: 0, closedMRR: 0, salesloftCalls: 0, aiCalls: 0 })),
+                channels: [],
+                sdrs: [],
+                teamTotals: { salesloftCalls: 0, salesloftConnected: 0, aiCalls: 0, aiCallsConnected: 0, totalDemos: 0, totalDeals: 0, mrrPipeline: 0, closedMRR: 0 },
+                month,
+                isOutbound: true
+            });
 
             // Process All Pods Overview sheet (different structure - Overview tab)
             const processAllPodsData = (rows, month) => {
@@ -2639,6 +2731,193 @@
                             </div>
                         </div>
                         </>
+                        ) : selectedPod === 'outbound' && POD_SPREADSHEETS[selectedPod] ? (
+                        /* OUTBOUND POD - Custom Layout for SDR Performance */
+                        <>
+                        <div className="filter-bar">
+                            <div className="filter-group">
+                                <span className="filter-label" style={{fontWeight: 600, color: 'var(--text-primary)'}}>
+                                    {selectedMonth === 'Overview' ? 'All-Time Overview' : `${selectedMonth} 2026`}
+                                </span>
+                            </div>
+                            <div style={{flex: 1}}></div>
+                            {lastUpdated && <span className="filter-label">Updated: {lastUpdated.toLocaleTimeString()}</span>}
+                        </div>
+
+                        <div className="content-area">
+                            {(() => {
+                                const SDR_DEFAULTS = [
+                                    { name: 'Akanksha', color: '#f59e0b' },
+                                    { name: 'Vanshita', color: '#667eea' },
+                                    { name: 'Samriddhi', color: '#ec4899' },
+                                    { name: 'Rashi', color: '#8b5cf6' },
+                                    { name: 'AI SDR', color: '#10b981' }
+                                ];
+                                const sdrs = currentData.sdrs && currentData.sdrs.length > 0 
+                                    ? currentData.sdrs 
+                                    : SDR_DEFAULTS.map(s => ({ ...s, salesloftCalls: 0, salesloftConnected: 0, aiCalls: 0, aiCallsConnected: 0, totalDemos: 0, totalDeals: 0, mrrPipeline: 0, closedMRR: 0, weeklyData: [] }));
+                                const teamTotals = currentData.teamTotals || { salesloftCalls: 0, salesloftConnected: 0, aiCalls: 0, aiCallsConnected: 0, totalDemos: 0, totalDeals: 0, mrrPipeline: 0, closedMRR: 0, salesloftConnectPercent: '0%', aiCallsConnectPercent: '0%', dealsColdData: 0, dealsMQLs: 0 };
+                                
+                                return (
+                                <>
+                                {/* Team Totals Summary */}
+                                <div className="sdr-section-title">Team Performance Summary</div>
+                                <div className="outbound-summary-grid">
+                                    <div className="outbound-stat-card">
+                                        <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>{Icons.phone}</div>
+                                        <div className="outbound-stat-content">
+                                            <div className="outbound-stat-value">{formatNumber(teamTotals.salesloftCalls)}</div>
+                                            <div className="outbound-stat-label">Salesloft Calls</div>
+                                        </div>
+                                        <div className="outbound-stat-sub">{formatNumber(teamTotals.salesloftConnected)} connected ({teamTotals.salesloftConnectPercent})</div>
+                                    </div>
+                                    <div className="outbound-stat-card">
+                                        <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'}}>{Icons.zap}</div>
+                                        <div className="outbound-stat-content">
+                                            <div className="outbound-stat-value">{formatNumber(teamTotals.aiCalls)}</div>
+                                            <div className="outbound-stat-label">AI Calls</div>
+                                        </div>
+                                        <div className="outbound-stat-sub">{formatNumber(teamTotals.aiCallsConnected)} connected ({teamTotals.aiCallsConnectPercent})</div>
+                                    </div>
+                                    <div className="outbound-stat-card">
+                                        <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'}}>{Icons.target}</div>
+                                        <div className="outbound-stat-content">
+                                            <div className="outbound-stat-value">{formatNumber(teamTotals.totalDemos)}</div>
+                                            <div className="outbound-stat-label">Total Demos</div>
+                                        </div>
+                                    </div>
+                                    <div className="outbound-stat-card">
+                                        <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)'}}>{Icons.check}</div>
+                                        <div className="outbound-stat-content">
+                                            <div className="outbound-stat-value">{formatNumber(teamTotals.totalDeals)}</div>
+                                            <div className="outbound-stat-label">Total Deals</div>
+                                        </div>
+                                        <div className="outbound-stat-sub">Cold: {formatNumber(teamTotals.dealsColdData)} | MQLs: {formatNumber(teamTotals.dealsMQLs)}</div>
+                                    </div>
+                                    <div className="outbound-stat-card">
+                                        <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'}}>{Icons.dollar}</div>
+                                        <div className="outbound-stat-content">
+                                            <div className="outbound-stat-value">{formatCurrency(teamTotals.mrrPipeline)}</div>
+                                            <div className="outbound-stat-label">MRR Pipeline</div>
+                                        </div>
+                                    </div>
+                                    <div className="outbound-stat-card">
+                                        <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'}}>{Icons.award}</div>
+                                        <div className="outbound-stat-content">
+                                            <div className="outbound-stat-value">{formatCurrency(teamTotals.closedMRR)}</div>
+                                            <div className="outbound-stat-label">Closed MRR</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* SDR Comparison Table */}
+                                <div className="sdr-section-title" style={{marginTop: '32px'}}>SDR Performance Comparison</div>
+                                <div className="table-card" style={{marginBottom: '24px'}}>
+                                    <div style={{overflowX: 'auto'}}>
+                                    <table className="sdr-table">
+                                        <thead>
+                                            <tr>
+                                                <th>SDR Name</th>
+                                                <th>Salesloft Calls</th>
+                                                <th>Connected</th>
+                                                <th>AI Calls</th>
+                                                <th>AI Connected</th>
+                                                <th>Demos</th>
+                                                <th>Deals</th>
+                                                <th>MRR Pipeline</th>
+                                                <th>Closed MRR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {sdrs.map((sdr, idx) => (
+                                                <tr key={idx}>
+                                                    <td>
+                                                        <div className="sdr-name-cell">
+                                                            <div className="sdr-mini-avatar" style={{background: sdr.color || '#667eea'}}>
+                                                                {sdr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                                            </div>
+                                                            <span style={{fontWeight: 500}}>{sdr.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>{formatNumber(sdr.salesloftCalls)}</td>
+                                                    <td>{formatNumber(sdr.salesloftConnected)} <span style={{color: 'var(--text-muted)', fontSize: '11px'}}>({sdr.salesloftConnectPercent})</span></td>
+                                                    <td>{formatNumber(sdr.aiCalls)}</td>
+                                                    <td>{formatNumber(sdr.aiCallsConnected)} <span style={{color: 'var(--text-muted)', fontSize: '11px'}}>({sdr.aiCallsConnectPercent})</span></td>
+                                                    <td style={{fontWeight: 600, color: '#f59e0b'}}>{formatNumber(sdr.totalDemos)}</td>
+                                                    <td style={{fontWeight: 600, color: '#10b981'}}>{formatNumber(sdr.totalDeals)}</td>
+                                                    <td>{formatCurrency(sdr.mrrPipeline)}</td>
+                                                    <td style={{fontWeight: 600, color: '#22c55e'}}>{formatCurrency(sdr.closedMRR)}</td>
+                                                </tr>
+                                            ))}
+                                            <tr style={{background: 'var(--bg-tertiary)', fontWeight: 600}}>
+                                                <td>
+                                                    <div className="sdr-name-cell">
+                                                        <div className="sdr-mini-avatar" style={{background: '#374151'}}>T</div>
+                                                        <span>TOTAL</span>
+                                                    </div>
+                                                </td>
+                                                <td>{formatNumber(teamTotals.salesloftCalls)}</td>
+                                                <td>{formatNumber(teamTotals.salesloftConnected)}</td>
+                                                <td>{formatNumber(teamTotals.aiCalls)}</td>
+                                                <td>{formatNumber(teamTotals.aiCallsConnected)}</td>
+                                                <td style={{color: '#f59e0b'}}>{formatNumber(teamTotals.totalDemos)}</td>
+                                                <td style={{color: '#10b981'}}>{formatNumber(teamTotals.totalDeals)}</td>
+                                                <td>{formatCurrency(teamTotals.mrrPipeline)}</td>
+                                                <td style={{color: '#22c55e'}}>{formatCurrency(teamTotals.closedMRR)}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    </div>
+                                </div>
+
+                                {/* Individual SDR Cards */}
+                                <div className="sdr-section-title">Individual SDR Details</div>
+                                <div className="sdr-grid">
+                                    {sdrs.map((sdr, idx) => (
+                                        <div key={idx} className="sdr-card">
+                                            <div className="sdr-header">
+                                                <div className="sdr-avatar" style={{background: sdr.color || '#667eea'}}>
+                                                    {sdr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                                </div>
+                                                <div className="sdr-info">
+                                                    <div className="sdr-name">{sdr.name}</div>
+                                                    <div className="sdr-role">Sales Development Rep</div>
+                                                </div>
+                                            </div>
+                                            <div className="sdr-metrics" style={{gridTemplateColumns: 'repeat(2, 1fr)'}}>
+                                                <div className="sdr-metric">
+                                                    <div className="sdr-metric-value">{formatNumber(sdr.salesloftCalls)}</div>
+                                                    <div className="sdr-metric-label">Salesloft</div>
+                                                </div>
+                                                <div className="sdr-metric">
+                                                    <div className="sdr-metric-value">{formatNumber(sdr.aiCalls)}</div>
+                                                    <div className="sdr-metric-label">AI Calls</div>
+                                                </div>
+                                                <div className="sdr-metric">
+                                                    <div className="sdr-metric-value" style={{color: '#f59e0b'}}>{formatNumber(sdr.totalDemos)}</div>
+                                                    <div className="sdr-metric-label">Demos</div>
+                                                </div>
+                                                <div className="sdr-metric">
+                                                    <div className="sdr-metric-value" style={{color: '#10b981'}}>{formatNumber(sdr.totalDeals)}</div>
+                                                    <div className="sdr-metric-label">Deals</div>
+                                                </div>
+                                                <div className="sdr-metric">
+                                                    <div className="sdr-metric-value">{formatCurrency(sdr.mrrPipeline)}</div>
+                                                    <div className="sdr-metric-label">Pipeline</div>
+                                                </div>
+                                                <div className="sdr-metric">
+                                                    <div className="sdr-metric-value" style={{color: '#22c55e'}}>{formatCurrency(sdr.closedMRR)}</div>
+                                                    <div className="sdr-metric-label">Closed</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                </>
+                                );
+                            })()}
+                        </div>
+                        </>
                         ) : POD_SPREADSHEETS[selectedPod] ? (
                         <>
                         <div className="filter-bar">
@@ -2860,114 +3139,6 @@
                                 })}
                                             </div>
 
-                            {/* SDR Section - Only for Outbound Pod */}
-                            {selectedPod === 'outbound' && (() => {
-                                const SDR_TEAM = [
-                                    { name: 'Vanshita', color: '#667eea' },
-                                    { name: 'Akanksha', color: '#f59e0b' },
-                                    { name: 'AI SDR', color: '#10b981' },
-                                    { name: 'Samriddhi', color: '#ec4899' },
-                                    { name: 'Rashi', color: '#8b5cf6' }
-                                ];
-                                const sdrs = currentData.sdrs && currentData.sdrs.length > 0 
-                                    ? currentData.sdrs 
-                                    : SDR_TEAM.map(s => ({ ...s, demos: 0, deals: 0, dealPoints: 0, accounts: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0 }));
-                                return (
-                                <div className="sdr-section">
-                                    <div className="sdr-section-title">SDR Performance Overview</div>
-                                    
-                                    {/* SDR Summary Table */}
-                                    <div className="table-card" style={{marginBottom: '24px'}}>
-                                        <div className="table-header">
-                                            <div className="table-title">Team Performance Summary</div>
-                                            </div>
-                                        <div style={{overflowX: 'auto'}}>
-                                        <table className="sdr-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>SDR Name</th>
-                                                    <th>Demos</th>
-                                                    <th>Deals</th>
-                                                    <th>Deal Points</th>
-                                                    <th>Accounts</th>
-                                                    <th>Gen. MRR</th>
-                                                    <th>Closed MRR</th>
-                                                    <th>Dir. Conv.</th>
-                                                    <th>Dir. MRR</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {sdrs.map((sdr, idx) => (
-                                                    <tr key={idx}>
-                                                        <td>
-                                                            <div className="sdr-name-cell">
-                                                                <div className="sdr-mini-avatar" style={{background: sdr.color || '#667eea'}}>
-                                                                    {sdr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                        </div>
-                                                                <span style={{fontWeight: 500}}>{sdr.name}</span>
-                                    </div>
-                                                        </td>
-                                                        <td>{formatNumber(sdr.demos)}</td>
-                                                        <td>{formatNumber(sdr.deals)}</td>
-                                                        <td>{formatNumber(sdr.dealPoints)}</td>
-                                                        <td>{formatNumber(sdr.accounts)}</td>
-                                                        <td>{formatCurrency(sdr.generatedMRR)}</td>
-                                                        <td>{formatCurrency(sdr.closedMRR)}</td>
-                                                        <td>{formatNumber(sdr.directConversions)}</td>
-                                                        <td>{formatCurrency(sdr.directConversionsMRR)}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                            </div>
-                        </div>
-
-                                    {/* Individual SDR Detail Cards */}
-                                    <div className="sdr-section-title">Individual SDR Details</div>
-                                    <div className="sdr-grid">
-                                        {sdrs.map((sdr, idx) => (
-                                            <div key={idx} className="sdr-card">
-                                                <div className="sdr-header">
-                                                    <div className="sdr-avatar" style={{background: sdr.color || '#667eea'}}>
-                                                        {sdr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                                    </div>
-                                                    <div className="sdr-info">
-                                                        <div className="sdr-name">{sdr.name}</div>
-                                                        <div className="sdr-role">Sales Development Rep</div>
-                                                    </div>
-                                                </div>
-                                                <div className="sdr-metrics">
-                                                    <div className="sdr-metric">
-                                                        <div className="sdr-metric-value">{formatNumber(sdr.demos)}</div>
-                                                        <div className="sdr-metric-label">Demos</div>
-                                                    </div>
-                                                    <div className="sdr-metric">
-                                                        <div className="sdr-metric-value">{formatNumber(sdr.deals)}</div>
-                                                        <div className="sdr-metric-label">Deals</div>
-                                                    </div>
-                                                    <div className="sdr-metric">
-                                                        <div className="sdr-metric-value">{formatNumber(sdr.dealPoints)}</div>
-                                                        <div className="sdr-metric-label">Deal Pts</div>
-                                                    </div>
-                                                    <div className="sdr-metric">
-                                                        <div className="sdr-metric-value">{formatNumber(sdr.accounts)}</div>
-                                                        <div className="sdr-metric-label">Accounts</div>
-                                                    </div>
-                                                    <div className="sdr-metric">
-                                                        <div className="sdr-metric-value">{formatCurrency(sdr.generatedMRR)}</div>
-                                                        <div className="sdr-metric-label">Gen. MRR</div>
-                                                    </div>
-                                                    <div className="sdr-metric">
-                                                        <div className="sdr-metric-value">{formatNumber(sdr.directConversions)}</div>
-                                                        <div className="sdr-metric-label">Dir. Conv</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                );
-                            })()}
                                             </div>
                         </>
                         ) : (
