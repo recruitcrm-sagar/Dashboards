@@ -656,6 +656,152 @@
 
         .channel-name { font-weight: 500; color: var(--text-primary); }
 
+        /* SDR Section Styles */
+        .sdr-section {
+            margin-top: 24px;
+        }
+
+        .sdr-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sdr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .sdr-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .sdr-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .sdr-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .sdr-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .sdr-info {
+            flex: 1;
+        }
+
+        .sdr-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .sdr-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .sdr-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .sdr-metric {
+            text-align: center;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+        }
+
+        .sdr-metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .sdr-metric-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .sdr-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .sdr-table th,
+        .sdr-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sdr-table th {
+            background: var(--bg-tertiary);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .sdr-table td {
+            font-size: 14px;
+        }
+
+        .sdr-table tr:hover td {
+            background: var(--bg-hover);
+        }
+
+        .sdr-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sdr-mini-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+            color: white;
+            text-transform: uppercase;
+        }
+
         /* Weekly Cards */
         .weekly-grid {
             display: grid;
@@ -1221,8 +1367,7 @@
                 // Data types: Cold Data, MQL - Capterra, MQL - Social Listening, etc.
                 // This is an independent section - no data flows to other pods
                 
-                // Summary totals - assuming similar structure to other pods for consistency
-                // Adjust column indices based on actual sheet structure
+                // Summary totals
                 const summaryCol = 14; // MTD column
                 const summary = {
                     spend: parseValue(rows[1]?.[summaryCol]),
@@ -1294,7 +1439,63 @@
                     });
                 });
 
-                return { summary, weeks, channels, month };
+                // Parse SDR data from the sheet
+                // SDR names are typically in column A, starting from a specific row
+                // We'll look for rows that contain SDR data
+                const sdrs = [];
+                
+                // Look for SDR data starting from row 40+ (after channel data)
+                // Each SDR has their name in column A and metrics in subsequent columns
+                for (let i = 40; i < Math.min(rows.length, 80); i++) {
+                    const name = rows[i]?.[0];
+                    // Skip empty rows or header rows
+                    if (name && name.trim() !== '' && !name.includes('SDR') && !name.includes('Total') && !name.includes('DATA')) {
+                        const sdr = {
+                            name: name.trim(),
+                            demos: parseValue(rows[i]?.[1]),
+                            deals: parseValue(rows[i]?.[2]),
+                            dealPoints: parseValue(rows[i]?.[3]),
+                            accounts: parseValue(rows[i]?.[4]),
+                            generatedMRR: parseValue(rows[i]?.[5]),
+                            closedMRR: parseValue(rows[i]?.[6]),
+                            directConversions: parseValue(rows[i]?.[7]),
+                            target: parseValue(rows[i]?.[8]),
+                            incentive: rows[i]?.[9] || ''
+                        };
+                        // Only add if SDR has some data
+                        if (sdr.demos > 0 || sdr.deals > 0 || sdr.accounts > 0 || sdr.name.length > 2) {
+                            sdrs.push(sdr);
+                        }
+                    }
+                }
+
+                // Also check for SDR names in a different location (column-based layout)
+                // Some sheets have SDRs across columns starting from column C
+                if (sdrs.length === 0) {
+                    // Try reading SDR names from row 1 or 2 across columns
+                    const headerRow = rows[0] || [];
+                    const dataRow = rows[1] || [];
+                    
+                    for (let col = 2; col < Math.min(headerRow.length, 20); col++) {
+                        const name = headerRow[col];
+                        if (name && name.trim() !== '' && !name.includes('Week') && !name.includes('MTD') && !name.includes('Total')) {
+                            sdrs.push({
+                                name: name.trim(),
+                                demos: parseValue(rows[3]?.[col]),
+                                deals: parseValue(rows[4]?.[col]),
+                                dealPoints: parseValue(rows[5]?.[col]),
+                                accounts: parseValue(rows[2]?.[col]),
+                                generatedMRR: parseValue(rows[10]?.[col]),
+                                closedMRR: parseValue(rows[11]?.[col]),
+                                directConversions: parseValue(rows[12]?.[col]),
+                                target: 0,
+                                incentive: ''
+                            });
+                        }
+                    }
+                }
+
+                return { summary, weeks, channels, sdrs, month };
             };
 
             // Process All Pods Overview sheet (different structure - Overview tab)
@@ -2662,6 +2863,55 @@
                                     );
                                 })}
                                             </div>
+
+                            {/* SDR Section - Only for Outbound Pod */}
+                            {selectedPod === 'outbound' && currentData.sdrs && currentData.sdrs.length > 0 && (
+                                <div className="sdr-section">
+                                    <div className="sdr-section-title">SDR Performance</div>
+                                    <div className="table-card">
+                                        <div className="table-header">
+                                            <div className="table-title">Sales Development Representatives</div>
+                                            </div>
+                                        <div style={{overflowX: 'auto'}}>
+                                        <table className="sdr-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>SDR Name</th>
+                                                    <th>Demos</th>
+                                                    <th>Deals</th>
+                                                    <th>Deal Points</th>
+                                                    <th>Accounts</th>
+                                                    <th>Gen. MRR</th>
+                                                    <th>Closed MRR</th>
+                                                    <th>Dir. Conv.</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {currentData.sdrs.map((sdr, idx) => (
+                                                    <tr key={idx}>
+                                                        <td>
+                                                            <div className="sdr-name-cell">
+                                                                <div className="sdr-mini-avatar">
+                                                                    {sdr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                        </div>
+                                                                <span style={{fontWeight: 500}}>{sdr.name}</span>
+                                    </div>
+                                                        </td>
+                                                        <td>{formatNumber(sdr.demos)}</td>
+                                                        <td>{formatNumber(sdr.deals)}</td>
+                                                        <td>{formatNumber(sdr.dealPoints)}</td>
+                                                        <td>{formatNumber(sdr.accounts)}</td>
+                                                        <td>{formatCurrency(sdr.generatedMRR)}</td>
+                                                        <td>{formatCurrency(sdr.closedMRR)}</td>
+                                                        <td>{formatNumber(sdr.directConversions)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                            </div>
+                        </div>
+                                </div>
+                            )}
                                             </div>
                         </>
                         ) : (
