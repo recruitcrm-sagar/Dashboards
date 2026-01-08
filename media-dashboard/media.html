@@ -454,6 +454,39 @@
             font-family: 'Inter', sans-serif;
         }
 
+        .week-metric-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 4px;
+        }
+
+        .growth-indicator {
+            display: inline-flex; align-items: center; gap: 2px;
+            font-size: 10px; font-weight: 500; padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .growth-indicator.up { background: #d1fae5; color: #059669; }
+        .growth-indicator.down { background: #fee2e2; color: #dc2626; }
+        .growth-indicator.neutral { background: #f1f5f9; color: #64748b; }
+
+        .growth-indicator svg { width: 10px; height: 10px; }
+
+        /* Chart Controls */
+        .chart-controls {
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .chart-metric-select {
+            padding: 6px 28px 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 12px; font-family: inherit;
+            color: var(--text-primary); background: var(--bg-primary);
+            cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
         /* Loading */
         .loading-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -571,6 +604,27 @@
             return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
         };
 
+        const calcGrowth = (current, previous) => {
+            if (!previous || previous === 0) return { percent: 0, direction: 'neutral' };
+            const percent = ((current - previous) / previous) * 100;
+            return {
+                percent: Math.abs(percent).toFixed(1),
+                direction: percent > 0 ? 'up' : percent < 0 ? 'down' : 'neutral'
+            };
+        };
+
+        const CHART_METRICS = [
+            { key: 'spend', label: 'Spend', format: 'currency' },
+            { key: 'accounts', label: 'Accounts', format: 'number' },
+            { key: 'demos', label: 'Demos', format: 'number' },
+            { key: 'deals', label: 'Deals', format: 'number' },
+            { key: 'dealPoints', label: 'Deal Points', format: 'number' },
+            { key: 'generatedMRR', label: 'Generated MRR', format: 'currency' },
+            { key: 'closedMRR', label: 'Closed MRR', format: 'currency' },
+            { key: 'directConversions', label: 'Direct Conversions', format: 'number' },
+            { key: 'directConversionsMRR', label: 'Direct Conv. MRR', format: 'currency' }
+        ];
+
         const parseValue = (value) => {
             if (!value || value === '' || value === '#DIV/0!' || value === '-') return 0;
             return parseFloat(String(value).replace(/[$,]/g, '')) || 0;
@@ -590,6 +644,9 @@
             star: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
             award: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
             arrowUp: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>,
+            trendUp: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+            trendDown: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
+            minus: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>,
             mouse: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="3" width="12" height="18" rx="6"/><line x1="12" y1="7" x2="12" y2="11"/></svg>,
             grid: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
             eye: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
@@ -610,6 +667,7 @@
             const [selectedPod, setSelectedPod] = useState('conversion');
             const [selectedMonth, setSelectedMonth] = useState('January');
             const [selectedWeek, setSelectedWeek] = useState('MTD');
+            const [chartMetric, setChartMetric] = useState('spend');
             const [searchTerm, setSearchTerm] = useState('');
             const [sortConfig, setSortConfig] = useState({ key: 'spend', direction: 'desc' });
             const [data, setData] = useState({});
@@ -858,17 +916,20 @@
                 if (trendChartInstance.current) trendChartInstance.current.destroy();
                 if (channelChartInstance.current) channelChartInstance.current.destroy();
 
-                // Bar chart for channel spend
+                const metricConfig = CHART_METRICS.find(m => m.key === chartMetric) || CHART_METRICS[0];
+                const isCurrency = metricConfig.format === 'currency';
+
+                // Bar chart for channel performance (dynamic metric)
                 const trendCtx = trendChartRef.current.getContext('2d');
-                const topChannels = [...currentData.channels].sort((a, b) => b.spend - a.spend).slice(0, 8);
+                const topChannels = [...currentData.channels].sort((a, b) => (b[chartMetric] || 0) - (a[chartMetric] || 0)).slice(0, 8);
                 
                 trendChartInstance.current = new Chart(trendCtx, {
                     type: 'bar',
                     data: {
-                        labels: topChannels.map(c => c.name.replace(' Ads', '').replace(' CPC', '')),
+                        labels: topChannels.map(c => c.name.replace(' Ads', '').replace(' CPC', '').replace(' CPL', '')),
                         datasets: [{
-                            label: 'Spend',
-                            data: topChannels.map(c => c.spend),
+                            label: metricConfig.label,
+                            data: topChannels.map(c => c[chartMetric] || 0),
                             backgroundColor: '#2563eb',
                             borderRadius: 4
                         }]
@@ -879,31 +940,64 @@
                         plugins: { legend: { display: false } },
                         scales: {
                             x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } } },
-                            y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', callback: v => '$' + v } }
+                            y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', callback: v => isCurrency ? '$' + v : v } }
                         }
                     }
                 });
 
-                // Doughnut chart
+                // Weekly trend line chart
                 const channelCtx = channelChartRef.current.getContext('2d');
-                const chartChannels = topChannels.filter(c => c.spend > 0);
+                const weeks = currentData.weeks || [];
                 
                 channelChartInstance.current = new Chart(channelCtx, {
-                    type: 'doughnut',
+                    type: 'line',
                     data: {
-                        labels: chartChannels.map(c => c.name.replace(' Ads', '')),
-                        datasets: [{
-                            data: chartChannels.map(c => c.spend),
-                            backgroundColor: ['#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#84cc16', '#ec4899'],
-                            borderWidth: 0
-                        }]
+                        labels: weeks.map(w => w.label),
+                        datasets: [
+                            {
+                                label: 'Spend',
+                                data: weeks.map(w => w.spend),
+                                borderColor: '#2563eb',
+                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#2563eb'
+                            },
+                            {
+                                label: 'Gen. MRR',
+                                data: weeks.map(w => w.generatedMRR),
+                                borderColor: '#059669',
+                                backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                fill: false,
+                                tension: 0.3,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#059669'
+                            },
+                            {
+                                label: 'Demos',
+                                data: weeks.map(w => w.demos),
+                                borderColor: '#d97706',
+                                backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                                fill: false,
+                                tension: 0.3,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#d97706',
+                                yAxisID: 'y1'
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '65%',
+                        interaction: { mode: 'index', intersect: false },
                         plugins: {
-                            legend: { position: 'right', labels: { color: '#475569', padding: 12, usePointStyle: true, font: { size: 11 } } }
+                            legend: { position: 'top', labels: { color: '#475569', padding: 12, usePointStyle: true, font: { size: 11 } } }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } } },
+                            y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', callback: v => '$' + v }, position: 'left' },
+                            y1: { grid: { display: false }, ticks: { color: '#d97706' }, position: 'right' }
                         }
                     }
                 });
@@ -912,7 +1006,7 @@
                     if (trendChartInstance.current) trendChartInstance.current.destroy();
                     if (channelChartInstance.current) channelChartInstance.current.destroy();
                 };
-            }, [currentData]);
+            }, [currentData, chartMetric]);
 
             const handleSort = (key) => {
                 setSortConfig(prev => ({
@@ -1080,7 +1174,12 @@
                             <div className="charts-grid">
                                 <div className="chart-card">
                                     <div className="chart-header">
-                                        <div className="chart-title">Spend by Channel</div>
+                                        <div className="chart-title">Channel Performance</div>
+                                        <div className="chart-controls">
+                                            <select className="chart-metric-select" value={chartMetric} onChange={(e) => setChartMetric(e.target.value)}>
+                                                {CHART_METRICS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+                                            </select>
+                                        </div>
                                     </div>
                                     <div className="chart-container">
                                         <canvas ref={trendChartRef}></canvas>
@@ -1088,7 +1187,7 @@
                                 </div>
                                 <div className="chart-card">
                                     <div className="chart-header">
-                                        <div className="chart-title">Distribution</div>
+                                        <div className="chart-title">Weekly Trend</div>
                                     </div>
                                     <div className="chart-container">
                                         <canvas ref={channelChartRef}></canvas>
@@ -1164,56 +1263,46 @@
                             </div>
 
                             <div className="weekly-grid">
-                                {currentData.weeks?.map((week, idx) => (
-                                    <div key={idx} className={`week-card ${selectedWeek === week.label ? 'active' : ''}`} onClick={() => setSelectedWeek(week.label)}>
-                                        <div className="week-card-header">
-                                            <div className="week-label">{week.label}</div>
-                                            <div className="week-dates">{week.dates}</div>
-                                        </div>
-                                        <div className="week-metrics">
+                                {currentData.weeks?.map((week, idx) => {
+                                    const prevWeek = idx > 0 ? currentData.weeks[idx - 1] : null;
+                                    const renderMetric = (label, value, prevValue, isCurrency = false) => {
+                                        const growth = prevWeek ? calcGrowth(value, prevValue) : null;
+                                        return (
                                             <div className="week-metric">
-                                                <div className="week-metric-label">Spend</div>
-                                                <div className="week-metric-value">{formatCurrency(week.spend)}</div>
+                                                <div className="week-metric-label">{label}</div>
+                                                <div className="week-metric-row">
+                                                    <div className="week-metric-value">{isCurrency ? formatCurrency(value) : formatNumber(value)}</div>
+                                                    {growth && growth.direction !== 'neutral' && (
+                                                        <span className={`growth-indicator ${growth.direction}`}>
+                                                            {growth.direction === 'up' ? Icons.trendUp : Icons.trendDown}
+                                                            {growth.percent}%
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Accounts</div>
-                                                <div className="week-metric-value">{formatNumber(week.accounts)}</div>
+                                        );
+                                    };
+                                    return (
+                                        <div key={idx} className={`week-card ${selectedWeek === week.label ? 'active' : ''}`} onClick={() => setSelectedWeek(week.label)}>
+                                            <div className="week-card-header">
+                                                <div className="week-label">{week.label}</div>
+                                                <div className="week-dates">{week.dates}</div>
                                             </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Demos</div>
-                                                <div className="week-metric-value">{formatNumber(week.demos)}</div>
-                                            </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Deals</div>
-                                                <div className="week-metric-value">{formatNumber(week.deals)}</div>
-                                            </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Deal Pts</div>
-                                                <div className="week-metric-value">{formatNumber(week.dealPoints)}</div>
-                                            </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Gen. MRR</div>
-                                                <div className="week-metric-value">{formatCurrency(week.generatedMRR)}</div>
-                                            </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Closed MRR</div>
-                                                <div className="week-metric-value">{formatCurrency(week.closedMRR)}</div>
-                                            </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Dir. Conv</div>
-                                                <div className="week-metric-value">{formatNumber(week.directConversions)}</div>
-                                            </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Dir. MRR</div>
-                                                <div className="week-metric-value">{formatCurrency(week.directConversionsMRR)}</div>
-                                            </div>
-                                            <div className="week-metric">
-                                                <div className="week-metric-label">Dir. DP</div>
-                                                <div className="week-metric-value">{formatNumber(week.directConversionsDealPoints)}</div>
+                                            <div className="week-metrics">
+                                                {renderMetric('Spend', week.spend, prevWeek?.spend, true)}
+                                                {renderMetric('Accounts', week.accounts, prevWeek?.accounts)}
+                                                {renderMetric('Demos', week.demos, prevWeek?.demos)}
+                                                {renderMetric('Deals', week.deals, prevWeek?.deals)}
+                                                {renderMetric('Deal Pts', week.dealPoints, prevWeek?.dealPoints)}
+                                                {renderMetric('Gen. MRR', week.generatedMRR, prevWeek?.generatedMRR, true)}
+                                                {renderMetric('Closed MRR', week.closedMRR, prevWeek?.closedMRR, true)}
+                                                {renderMetric('Dir. Conv', week.directConversions, prevWeek?.directConversions)}
+                                                {renderMetric('Dir. MRR', week.directConversionsMRR, prevWeek?.directConversionsMRR, true)}
+                                                {renderMetric('Dir. DP', week.directConversionsDealPoints, prevWeek?.directConversionsDealPoints)}
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                         </>
