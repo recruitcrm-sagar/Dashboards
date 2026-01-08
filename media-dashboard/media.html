@@ -172,6 +172,21 @@
         .status-indicator.error { background: var(--accent-danger); }
         .status-indicator.loading { background: var(--accent-warning); animation: pulse 1.5s infinite; }
 
+        .refresh-info {
+            display: flex; flex-direction: column; gap: 4px;
+            padding: 10px 12px; background: var(--bg-tertiary);
+            border-radius: var(--radius-md); margin-top: 8px;
+        }
+
+        .refresh-row {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 11px; color: var(--text-muted);
+        }
+
+        .refresh-label { font-weight: 500; }
+        .refresh-value { font-family: 'Inter', sans-serif; color: var(--text-secondary); }
+        .refresh-countdown { color: var(--accent-primary); font-weight: 600; }
+
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
         /* Main Content */
@@ -679,7 +694,9 @@
             const [refreshing, setRefreshing] = useState(false);
             const [error, setError] = useState(null);
             const [lastUpdated, setLastUpdated] = useState(null);
+            const [nextRefresh, setNextRefresh] = useState(null);
             const [toast, setToast] = useState(null);
+            const [countdown, setCountdown] = useState('');
 
             const trendChartRef = useRef(null);
             const channelChartRef = useRef(null);
@@ -881,7 +898,9 @@
                     }
 
                     setData(allData);
-                    setLastUpdated(new Date());
+                    const now = new Date();
+                    setLastUpdated(now);
+                    setNextRefresh(new Date(now.getTime() + 60 * 60 * 1000)); // 1 hour from now
                     setError(null);
                     showToast('Data refreshed successfully');
                 } catch (err) {
@@ -894,7 +913,43 @@
                 }
             };
 
-            useEffect(() => { fetchAllData(); }, []);
+            // Initial fetch and auto-refresh every 1 hour
+            useEffect(() => {
+                fetchAllData();
+                
+                // Set up auto-refresh interval (1 hour = 3600000 ms)
+                const refreshInterval = setInterval(() => {
+                    console.log('Auto-refreshing data...');
+                    fetchAllData();
+                }, 60 * 60 * 1000); // 1 hour
+                
+                // Cleanup on unmount
+                return () => clearInterval(refreshInterval);
+            }, []);
+
+            // Countdown timer for next refresh
+            useEffect(() => {
+                if (!nextRefresh) return;
+                
+                const updateCountdown = () => {
+                    const now = new Date();
+                    const diff = nextRefresh.getTime() - now.getTime();
+                    
+                    if (diff <= 0) {
+                        setCountdown('Refreshing...');
+                        return;
+                    }
+                    
+                    const minutes = Math.floor(diff / 60000);
+                    const seconds = Math.floor((diff % 60000) / 1000);
+                    setCountdown(`${minutes}m ${seconds}s`);
+                };
+                
+                updateCountdown();
+                const countdownInterval = setInterval(updateCountdown, 1000);
+                
+                return () => clearInterval(countdownInterval);
+            }, [nextRefresh]);
 
             const currentData = useMemo(() => data[selectedMonth] || getEmptyData(selectedMonth), [data, selectedMonth]);
 
@@ -1089,6 +1144,16 @@
                             <div className="connection-status">
                                 <div className={`status-indicator ${error ? 'error' : refreshing ? 'loading' : ''}`}></div>
                                 <span>{error ? 'Error' : refreshing ? 'Syncing...' : 'Connected'}</span>
+                            </div>
+                            <div className="refresh-info">
+                                <div className="refresh-row">
+                                    <span className="refresh-label">Last Updated</span>
+                                    <span className="refresh-value">{lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}</span>
+                                </div>
+                                <div className="refresh-row">
+                                    <span className="refresh-label">Next Refresh</span>
+                                    <span className="refresh-value refresh-countdown">{countdown || '—'}</span>
+                                </div>
                             </div>
                         </div>
                     </aside>
