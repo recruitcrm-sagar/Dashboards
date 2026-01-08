@@ -2011,7 +2011,89 @@
                 return available.length > 0 ? available : ['January'];
             };
 
-            // Fetch Leadership data from all pods
+            // Fetch Leadership data from all pods for a specific month
+            const fetchLeadershipMonthData = async (month) => {
+                try {
+                    // Fetch data from each pod for the given month
+                    const conversionUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.conversion}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
+                    const brandUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.brand}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
+                    const awarenessUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.awareness}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
+
+                    const [conversionResp, brandResp, awarenessResp] = await Promise.all([
+                        fetch(conversionUrl),
+                        fetch(brandUrl),
+                        fetch(awarenessUrl)
+                    ]);
+
+                    const conversionResult = conversionResp.ok ? await conversionResp.json() : { values: [] };
+                    const brandResult = brandResp.ok ? await brandResp.json() : { values: [] };
+                    const awarenessResult = awarenessResp.ok ? await awarenessResp.json() : { values: [] };
+
+                    // Process each pod's data
+                    const conversionData = processSheetData(conversionResult.values || [], month);
+                    const brandData = processBrandAdvocacyData(brandResult.values || [], month);
+                    const awarenessData = processAwarenessData(awarenessResult.values || [], month);
+
+                    // Combine into leadership data with pod breakdown
+                    const allChannels = [
+                        ...conversionData.channels.map(ch => ({ ...ch, pod: 'Conversion', podIcon: 'conversion' })),
+                        ...brandData.channels.map(ch => ({ ...ch, pod: 'Brand Advocacy', podIcon: 'brand' })),
+                        ...awarenessData.channels.map(ch => ({ ...ch, pod: 'Awareness', podIcon: 'awareness' }))
+                    ];
+
+                    // Create pod totals
+                    const createPodTotal = (data, name, icon) => ({
+                        name: `${name} (Total)`,
+                        icon,
+                        spend: data.summary?.spend || 0,
+                        accounts: data.summary?.accounts || 0,
+                        demos: data.summary?.demos || 0,
+                        deals: data.summary?.deals || 0,
+                        dealPoints: data.summary?.dealPoints || 0,
+                        generatedMRR: data.summary?.generatedMRR || 0,
+                        closedMRR: data.summary?.closedMRR || 0,
+                        directConversions: data.summary?.directConversions || 0,
+                        directConversionsMRR: data.summary?.directConversionsMRR || 0,
+                        directConversionsDealPoints: data.summary?.directConversionsDealPoints || 0
+                    });
+
+                    const podTotals = [
+                        createPodTotal(awarenessData, 'Awareness Pod', 'awareness'),
+                        createPodTotal(brandData, 'Brand Advocacy Pod', 'brand'),
+                        createPodTotal(conversionData, 'Conversion Pod', 'conversion'),
+                        createPodTotal({ summary: { accounts: 0, demos: 0, deals: 0, dealPoints: 0 } }, 'Misc Pod', 'misc')
+                    ];
+
+                    // Aggregate summary
+                    const summary = {
+                        spend: (conversionData.summary?.spend || 0) + (brandData.summary?.spend || 0) + (awarenessData.summary?.spend || 0),
+                        accounts: (conversionData.summary?.accounts || 0) + (brandData.summary?.accounts || 0) + (awarenessData.summary?.accounts || 0),
+                        demos: (conversionData.summary?.demos || 0) + (brandData.summary?.demos || 0) + (awarenessData.summary?.demos || 0),
+                        deals: (conversionData.summary?.deals || 0) + (brandData.summary?.deals || 0) + (awarenessData.summary?.deals || 0),
+                        dealPoints: (conversionData.summary?.dealPoints || 0) + (brandData.summary?.dealPoints || 0) + (awarenessData.summary?.dealPoints || 0),
+                        generatedMRR: (conversionData.summary?.generatedMRR || 0) + (brandData.summary?.generatedMRR || 0) + (awarenessData.summary?.generatedMRR || 0),
+                        closedMRR: (conversionData.summary?.closedMRR || 0) + (brandData.summary?.closedMRR || 0) + (awarenessData.summary?.closedMRR || 0),
+                        directConversions: (conversionData.summary?.directConversions || 0) + (brandData.summary?.directConversions || 0) + (awarenessData.summary?.directConversions || 0),
+                        directConversionsMRR: (conversionData.summary?.directConversionsMRR || 0) + (brandData.summary?.directConversionsMRR || 0) + (awarenessData.summary?.directConversionsMRR || 0),
+                        directConversionsDealPoints: (conversionData.summary?.directConversionsDealPoints || 0) + (brandData.summary?.directConversionsDealPoints || 0) + (awarenessData.summary?.directConversionsDealPoints || 0)
+                    };
+
+                    // Combine weeks from all pods
+                    const weeks = [...(conversionData.weeks || [])];
+
+                    return {
+                        summary,
+                        weeks,
+                        channels: [...podTotals, ...allChannels],
+                        month
+                    };
+                } catch (err) {
+                    console.error('Error fetching leadership month data:', err);
+                    return null;
+                }
+            };
+
+            // Fetch Leadership data from all pods (for Overview - all time)
             const fetchLeadershipData = async () => {
                 try {
                     // Fetch All Pods overview
@@ -2160,12 +2242,30 @@
 
                 setRefreshing(true);
                 try {
-                    // Leadership pod - fetch aggregated all-time data from all pods
+                    // Leadership pod - fetch data from all pods for each month
                     if (podKey === 'leadership') {
-                        const leadershipData = await fetchLeadershipData();
-                        setAvailableMonths(['All Time']);
-                        setSelectedMonth('All Time');
-                        setData({ 'All Time': leadershipData || getEmptyData('All Time') });
+                        // Check which months are available (use conversion pod as reference)
+                        const available = await checkAvailableMonths(POD_SPREADSHEETS.conversion, 'conversion');
+                    setAvailableMonths(available);
+
+                    const allData = {};
+                    for (const month of available) {
+                            const monthData = await fetchLeadershipMonthData(month);
+                        if (monthData) allData[month] = monthData;
+                    }
+
+                    if (Object.keys(allData).length === 0) {
+                        allData['January'] = getEmptyData('January');
+                    }
+
+                        // Create Overview aggregation for Leadership
+                        const overviewData = await fetchLeadershipData();
+                        allData['Overview'] = overviewData || aggregateMonthsData(allData);
+
+                    setData(allData);
+                        if (selectedMonth !== 'Overview' && !available.includes(selectedMonth)) {
+                            setSelectedMonth('Overview');
+                        }
                     }
                     // All Pods uses Overview tab, not monthly tabs
                     else if (podKey === 'all') {
@@ -2216,8 +2316,8 @@
             useEffect(() => {
                 if (POD_SPREADSHEETS[selectedPod]) {
                     setLoading(true);
-                    // Default to Overview for pods with monthly data
-                    if (selectedPod !== 'leadership' && selectedPod !== 'all') {
+                    // Default to Overview for pods with monthly data (including Leadership now)
+                    if (selectedPod !== 'all') {
                         setSelectedMonth('Overview');
                     }
                     fetchAllData(selectedPod);
@@ -2493,18 +2593,45 @@
 
                         {selectedPod === 'leadership' && currentData.channels ? (
                         <>
+                        {/* Period Tabs for Leadership */}
+                        <div className="period-tabs">
+                            <button
+                                className={`period-tab ${selectedMonth === 'Overview' ? 'active' : ''}`}
+                                onClick={() => setSelectedMonth('Overview')}
+                            >
+                                {Icons.globe} Overview
+                            </button>
+                            {MONTHS.map(m => {
+                                const isAvailable = availableMonths.includes(m.key);
+                                return (
+                                    <button
+                                        key={m.key}
+                                        className={`period-tab ${selectedMonth === m.key ? 'active' : ''} ${!isAvailable ? 'disabled' : ''}`}
+                                        onClick={() => isAvailable && setSelectedMonth(m.key)}
+                                        disabled={!isAvailable}
+                                    >
+                                        {m.short}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
                         <div className="filter-bar">
                             <div className="leadership-header">
-                                <div className="leadership-title">All-Time Performance Overview</div>
+                                <div className="leadership-title">
+                                    {selectedMonth === 'Overview' ? 'All-Time Performance Overview' : `${selectedMonth} 2026 Performance`}
+                                </div>
                             </div>
                             <div style={{flex: 1}}></div>
                             {lastUpdated && <span className="filter-label">Updated: {lastUpdated.toLocaleTimeString()}</span>}
                         </div>
 
                         <div className="content-area">
-                            {/* All-Time Summary Metrics */}
+                            {/* Summary Metrics */}
                             <div className="leadership-section">
-                                <div className="leadership-section-title">All-Time Totals (All Pods Combined)</div>
+                                <div className="leadership-section-title">
+                                    {selectedMonth === 'Overview' ? 'All-Time Totals (All Pods Combined)' : `${selectedMonth} 2026 Totals (All Pods Combined)`}
+                                </div>
                             <div className="summary-grid">
                                 <div className="summary-card">
                                     <div className="summary-icon spend">{Icons.dollar}</div>
