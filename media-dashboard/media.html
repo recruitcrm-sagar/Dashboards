@@ -452,6 +452,10 @@
         .channel-icon.socials { background: #1da1f2; }
         .channel-icon.employee { background: #10b981; }
         .channel-icon.imevents { background: #8b5cf6; }
+        .channel-icon.awareness { background: #f59e0b; }
+        .channel-icon.brand { background: #ec4899; }
+        .channel-icon.conversion { background: #10b981; }
+        .channel-icon.untracked { background: #64748b; }
 
         .channel-name { font-weight: 500; color: var(--text-primary); }
 
@@ -597,7 +601,8 @@
         const POD_SPREADSHEETS = {
             conversion: '1Rq85bACiKxewmW9vpsZ7vTZYTnkMBYsGxOzhxj_m_WE',
             brand: '1qBPiHwq7yAH-le1W2rUMMma97TtDVeV9r_GHsyrEXSs',
-            awareness: '1u0gIrFqEiPtsmaKF9BedN3r8eV_3JWe-2h364tdIeRk'
+            awareness: '1u0gIrFqEiPtsmaKF9BedN3r8eV_3JWe-2h364tdIeRk',
+            all: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs'
         };
         // ============================================
 
@@ -1003,6 +1008,116 @@
                 return { summary, weeks, channels, month };
             };
 
+            // Process All Pods Overview sheet (different structure - Overview tab)
+            const processAllPodsData = (rows, month) => {
+                if (!rows || rows.length === 0) return getEmptyData(month);
+
+                // All-time totals are in column B (index 1) at rows 1-14
+                const summary = {
+                    spend: parseValue(rows[1]?.[1]),
+                    accounts: parseValue(rows[2]?.[1]),
+                    demos: parseValue(rows[3]?.[1]),
+                    deals: parseValue(rows[4]?.[1]),
+                    dealPoints: parseValue(rows[5]?.[1]),
+                    generatedMRR: parseValue(rows[10]?.[1]),
+                    closedMRR: parseValue(rows[11]?.[1]),
+                    directConversions: parseValue(rows[12]?.[1]),
+                    directConversionsMRR: parseValue(rows[13]?.[1]),
+                    directConversionsDealPoints: parseValue(rows[14]?.[1])
+                };
+
+                // Monthly data starts at row 18, with months in columns C-N (indices 2-13)
+                // Use months as "weeks" for display purposes
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const weeks = monthNames.slice(0, 4).map((m, idx) => {
+                    const colOffset = idx + 2; // Jan=2, Feb=3, Mar=4, Apr=5
+                    return {
+                        label: m,
+                        dates: `${m} 2026`,
+                        spend: parseValue(rows[19]?.[colOffset]),
+                        accounts: parseValue(rows[20]?.[colOffset]),
+                        demos: parseValue(rows[21]?.[colOffset]),
+                        deals: parseValue(rows[22]?.[colOffset]),
+                        dealPoints: parseValue(rows[23]?.[colOffset]),
+                        generatedMRR: parseValue(rows[28]?.[colOffset]),
+                        closedMRR: parseValue(rows[29]?.[colOffset]),
+                        directConversions: parseValue(rows[30]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[31]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[32]?.[colOffset])
+                    };
+                });
+
+                // Pod breakdown as channels (from rows 0-14, different columns for each pod)
+                const channels = [
+                    {
+                        name: 'Awareness Pod',
+                        icon: 'awareness',
+                        short: 'AW',
+                        spend: parseValue(rows[1]?.[4]),
+                        accounts: parseValue(rows[2]?.[4]),
+                        demos: parseValue(rows[3]?.[4]),
+                        deals: parseValue(rows[4]?.[4]),
+                        dealPoints: parseValue(rows[5]?.[4]),
+                        generatedMRR: parseValue(rows[10]?.[4]),
+                        closedMRR: parseValue(rows[11]?.[4]),
+                        directConversions: parseValue(rows[12]?.[4]),
+                        directConversionsMRR: parseValue(rows[13]?.[4]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[4]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    },
+                    {
+                        name: 'Brand Advocacy Pod',
+                        icon: 'brand',
+                        short: 'BA',
+                        spend: parseValue(rows[1]?.[6]),
+                        accounts: parseValue(rows[2]?.[6]),
+                        demos: parseValue(rows[3]?.[6]),
+                        deals: parseValue(rows[4]?.[6]),
+                        dealPoints: parseValue(rows[5]?.[6]),
+                        generatedMRR: parseValue(rows[10]?.[6]),
+                        closedMRR: parseValue(rows[11]?.[6]),
+                        directConversions: parseValue(rows[12]?.[6]),
+                        directConversionsMRR: parseValue(rows[13]?.[6]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[6]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    },
+                    {
+                        name: 'Conversion Pod',
+                        icon: 'conversion',
+                        short: 'CV',
+                        spend: parseValue(rows[1]?.[8]),
+                        accounts: parseValue(rows[2]?.[8]),
+                        demos: parseValue(rows[3]?.[8]),
+                        deals: parseValue(rows[4]?.[8]),
+                        dealPoints: parseValue(rows[5]?.[8]),
+                        generatedMRR: parseValue(rows[10]?.[8]),
+                        closedMRR: parseValue(rows[11]?.[8]),
+                        directConversions: parseValue(rows[12]?.[8]),
+                        directConversionsMRR: parseValue(rows[13]?.[8]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[8]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    },
+                    {
+                        name: 'Untracked Pod',
+                        icon: 'untracked',
+                        short: 'UT',
+                        spend: parseValue(rows[1]?.[10]),
+                        accounts: parseValue(rows[2]?.[10]),
+                        demos: parseValue(rows[3]?.[10]),
+                        deals: parseValue(rows[4]?.[10]),
+                        dealPoints: parseValue(rows[5]?.[10]),
+                        generatedMRR: parseValue(rows[10]?.[10]),
+                        closedMRR: parseValue(rows[11]?.[10]),
+                        directConversions: parseValue(rows[12]?.[10]),
+                        directConversionsMRR: parseValue(rows[13]?.[10]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[10]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    }
+                ];
+
+                return { summary, weeks, channels, month: 'All Time' };
+            };
+
             const getEmptyData = (month) => ({
                 summary: { spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 },
                 weeks: WEEKS.map(week => ({ label: week, dates: WEEK_DATES[week], spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 })),
@@ -1012,7 +1127,8 @@
 
             const fetchMonthData = async (month, spreadsheetId, podKey) => {
                 try {
-                    const range = `${month}!A1:AZ100`;
+                    // All Pods uses Overview tab, not monthly tabs
+                    const range = podKey === 'all' ? 'Overview!A1:O35' : `${month}!A1:AZ100`;
                     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${API_KEY}`;
                     const response = await fetch(url);
                     
@@ -1023,7 +1139,9 @@
                     
                     const result = await response.json();
                     // Use appropriate parser based on pod
-                    if (podKey === 'brand') {
+                    if (podKey === 'all') {
+                        return processAllPodsData(result.values, month);
+                    } else if (podKey === 'brand') {
                         return processBrandAdvocacyData(result.values, month);
                     } else if (podKey === 'awareness') {
                         return processAwarenessData(result.values, month);
@@ -1059,20 +1177,32 @@
 
                 setRefreshing(true);
                 try {
-                    const available = await checkAvailableMonths(spreadsheetId);
-                    setAvailableMonths(available);
+                    // All Pods uses Overview tab, not monthly tabs
+                    if (podKey === 'all') {
+                        const overviewData = await fetchMonthData('Overview', spreadsheetId, podKey);
+                        setAvailableMonths(['All Time']);
+                        setSelectedMonth('All Time');
+                        setData({ 'All Time': overviewData || getEmptyData('All Time') });
+                    } else {
+                        const available = await checkAvailableMonths(spreadsheetId);
+                        setAvailableMonths(available);
 
-                    const allData = {};
-                    for (const month of available) {
-                        const monthData = await fetchMonthData(month, spreadsheetId, podKey);
-                        if (monthData) allData[month] = monthData;
+                        const allData = {};
+                        for (const month of available) {
+                            const monthData = await fetchMonthData(month, spreadsheetId, podKey);
+                            if (monthData) allData[month] = monthData;
+                        }
+
+                        if (Object.keys(allData).length === 0) {
+                            allData['January'] = getEmptyData('January');
+                        }
+
+                        setData(allData);
+                        if (!available.includes(selectedMonth)) {
+                            setSelectedMonth(available[0] || 'January');
+                        }
                     }
-
-                    if (Object.keys(allData).length === 0) {
-                        allData['January'] = getEmptyData('January');
-                    }
-
-                    setData(allData);
+                    
                     const now = new Date();
                     setLastUpdated(now);
                     setNextRefresh(new Date(now.getTime() + 60 * 60 * 1000)); // 1 hour from now
