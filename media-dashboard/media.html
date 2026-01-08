@@ -445,6 +445,9 @@
         .channel-icon.outboundmql { background: #10b981; }
         .channel-icon.outboundcold { background: #14b8a6; }
         .channel-icon.affiliate { background: #8b5cf6; }
+        .channel-icon.seo { background: #059669; }
+        .channel-icon.brandcitations { background: #7c3aed; }
+        .channel-icon.directory { background: #0891b2; }
 
         .channel-name { font-weight: 500; color: var(--text-primary); }
 
@@ -584,8 +587,13 @@
         // ============================================
         // CONFIGURATION - UPDATE YOUR API KEY HERE
         // ============================================
-        const SPREADSHEET_ID = '1Rq85bACiKxewmW9vpsZ7vTZYTnkMBYsGxOzhxj_m_WE';
-        const API_KEY = 'AIzaSyC-MIaq9T9lhvKtvjEritwv1uSq9NhME-0'; // <-- REPLACE THIS WITH YOUR API KEY
+        const API_KEY = 'AIzaSyC-MIaq9T9lhvKtvjEritwv1uSq9NhME-0';
+        
+        // Spreadsheet IDs for each pod
+        const POD_SPREADSHEETS = {
+            conversion: '1Rq85bACiKxewmW9vpsZ7vTZYTnkMBYsGxOzhxj_m_WE',
+            brand: '1qBPiHwq7yAH-le1W2rUMMma97TtDVeV9r_GHsyrEXSs'
+        };
         // ============================================
 
         const MONTHS = [
@@ -856,6 +864,73 @@
                 return { summary, weeks, channels, month };
             };
 
+            // Process Brand Advocacy sheet data (different structure)
+            const processBrandAdvocacyData = (rows, month) => {
+                if (!rows || rows.length === 0) return getEmptyData(month);
+
+                // Brand Advocacy structure: MTD totals in column O (index 14)
+                const summaryCol = 14;
+                const summary = {
+                    spend: parseValue(rows[1]?.[summaryCol]),
+                    accounts: parseValue(rows[2]?.[summaryCol]),
+                    demos: parseValue(rows[3]?.[summaryCol]),
+                    deals: parseValue(rows[4]?.[summaryCol]),
+                    dealPoints: parseValue(rows[5]?.[summaryCol]),
+                    generatedMRR: parseValue(rows[10]?.[summaryCol]),
+                    closedMRR: parseValue(rows[11]?.[summaryCol]),
+                    directConversions: parseValue(rows[12]?.[summaryCol]),
+                    directConversionsMRR: parseValue(rows[13]?.[summaryCol]),
+                    directConversionsDealPoints: parseValue(rows[14]?.[summaryCol])
+                };
+
+                // Weekly data at indices 2, 5, 8, 11
+                const weeks = WEEKS.map((week, idx) => {
+                    const colOffset = idx * 3 + 2; // Week 1=2, Week 2=5, Week 3=8, Week 4=11
+                    return {
+                        label: week,
+                        dates: WEEK_DATES[week],
+                        spend: parseValue(rows[1]?.[colOffset]),
+                        accounts: parseValue(rows[2]?.[colOffset]),
+                        demos: parseValue(rows[3]?.[colOffset]),
+                        deals: parseValue(rows[4]?.[colOffset]),
+                        dealPoints: parseValue(rows[5]?.[colOffset]),
+                        generatedMRR: parseValue(rows[10]?.[colOffset]),
+                        closedMRR: parseValue(rows[11]?.[colOffset]),
+                        directConversions: parseValue(rows[12]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[13]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[colOffset])
+                    };
+                });
+
+                // Brand Advocacy channels: SEO, Brand Citations, Directory Listings (row 17+)
+                const channels = [];
+                const brandChannels = ['SEO', 'Brand Citations', 'Directory Listings'];
+                const brandIcons = ['seo', 'brandcitations', 'directory'];
+                const brandShorts = ['S', 'BC', 'D'];
+                
+                brandChannels.forEach((name, idx) => {
+                    const colOffset = idx * 3 + 2;
+                    channels.push({
+                        name,
+                        icon: brandIcons[idx],
+                        short: brandShorts[idx],
+                        spend: parseValue(rows[18]?.[colOffset]),
+                        accounts: parseValue(rows[19]?.[colOffset]),
+                        demos: parseValue(rows[20]?.[colOffset]),
+                        deals: parseValue(rows[21]?.[colOffset]),
+                        dealPoints: parseValue(rows[22]?.[colOffset]),
+                        generatedMRR: parseValue(rows[27]?.[colOffset]),
+                        closedMRR: parseValue(rows[28]?.[colOffset]),
+                        directConversions: parseValue(rows[29]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[30]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[31]?.[colOffset]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    });
+                });
+
+                return { summary, weeks, channels, month };
+            };
+
             const getEmptyData = (month) => ({
                 summary: { spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 },
                 weeks: WEEKS.map(week => ({ label: week, dates: WEEK_DATES[week], spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 })),
@@ -863,10 +938,10 @@
                 month
             });
 
-            const fetchMonthData = async (month) => {
+            const fetchMonthData = async (month, spreadsheetId, podKey) => {
                 try {
                     const range = `${month}!A1:AZ100`;
-                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${API_KEY}`;
                     const response = await fetch(url);
                     
                     if (!response.ok) {
@@ -875,6 +950,10 @@
                     }
                     
                     const result = await response.json();
+                    // Use appropriate parser based on pod
+                    if (podKey === 'brand') {
+                        return processBrandAdvocacyData(result.values, month);
+                    }
                     return processSheetData(result.values, month);
                 } catch (err) {
                     console.error(`Error fetching ${month}:`, err);
@@ -882,11 +961,11 @@
                 }
             };
 
-            const checkAvailableMonths = async () => {
+            const checkAvailableMonths = async (spreadsheetId) => {
                 const available = [];
                 for (const month of MONTHS) {
                     try {
-                        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${month.key}!A1:A1?key=${API_KEY}`;
+                        const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${month.key}!A1:A1?key=${API_KEY}`;
                         const response = await fetch(url);
                         if (response.ok) available.push(month.key);
                     } catch (err) { /* Month doesn't exist */ }
@@ -894,15 +973,24 @@
                 return available.length > 0 ? available : ['January'];
             };
 
-            const fetchAllData = async () => {
+            const fetchAllData = async (podKey = selectedPod) => {
+                const spreadsheetId = POD_SPREADSHEETS[podKey];
+                if (!spreadsheetId) {
+                    // No spreadsheet configured for this pod
+                    setData({});
+                    setAvailableMonths(['January']);
+                    setLoading(false);
+                    return;
+                }
+
                 setRefreshing(true);
                 try {
-                    const available = await checkAvailableMonths();
+                    const available = await checkAvailableMonths(spreadsheetId);
                     setAvailableMonths(available);
 
                     const allData = {};
                     for (const month of available) {
-                        const monthData = await fetchMonthData(month);
+                        const monthData = await fetchMonthData(month, spreadsheetId, podKey);
                         if (monthData) allData[month] = monthData;
                     }
 
@@ -926,6 +1014,14 @@
                 }
             };
 
+            // Fetch data when pod changes
+            useEffect(() => {
+                if (POD_SPREADSHEETS[selectedPod]) {
+                    setLoading(true);
+                    fetchAllData(selectedPod);
+                }
+            }, [selectedPod]);
+
             // Initial fetch and auto-refresh every 1 hour
             useEffect(() => {
                 fetchAllData();
@@ -933,7 +1029,7 @@
                 // Set up auto-refresh interval (1 hour = 3600000 ms)
                 const refreshInterval = setInterval(() => {
                     console.log('Auto-refreshing data...');
-                    fetchAllData();
+                    fetchAllData(selectedPod);
                 }, 60 * 60 * 1000); // 1 hour
                 
                 // Cleanup on unmount
@@ -1186,7 +1282,7 @@
                             </div>
                         </div>
 
-                        {selectedPod === 'conversion' ? (
+                        {POD_SPREADSHEETS[selectedPod] ? (
                         <>
                         <div className="filter-bar">
                             <div className="filter-group">
