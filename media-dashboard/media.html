@@ -2001,7 +2001,27 @@
                     });
                 });
 
-                return { summary, weeks, channels: Object.values(channelMap), month: 'Overview' };
+                // Aggregate SDRs for Outbound pod
+                const sdrMap = {};
+                allMonths.forEach(m => {
+                    (m.sdrs || []).forEach(sdr => {
+                        if (!sdrMap[sdr.name]) {
+                            sdrMap[sdr.name] = { ...sdr };
+                        } else {
+                            sdrMap[sdr.name].demos += sdr.demos || 0;
+                            sdrMap[sdr.name].deals += sdr.deals || 0;
+                            sdrMap[sdr.name].dealPoints += sdr.dealPoints || 0;
+                            sdrMap[sdr.name].accounts += sdr.accounts || 0;
+                            sdrMap[sdr.name].generatedMRR += sdr.generatedMRR || 0;
+                            sdrMap[sdr.name].closedMRR += sdr.closedMRR || 0;
+                            sdrMap[sdr.name].directConversions += sdr.directConversions || 0;
+                            sdrMap[sdr.name].directConversionsMRR += sdr.directConversionsMRR || 0;
+                            sdrMap[sdr.name].directConversionsDealPoints += sdr.directConversionsDealPoints || 0;
+                        }
+                    });
+                });
+
+                return { summary, weeks, channels: Object.values(channelMap), sdrs: Object.values(sdrMap), month: 'Overview' };
             };
 
             const fetchAllData = async (podKey = selectedPod) => {
@@ -2841,7 +2861,18 @@
                                             </div>
 
                             {/* SDR Section - Only for Outbound Pod */}
-                            {selectedPod === 'outbound' && currentData.sdrs && currentData.sdrs.length > 0 && (
+                            {selectedPod === 'outbound' && (() => {
+                                const SDR_TEAM = [
+                                    { name: 'Vanshita', color: '#667eea' },
+                                    { name: 'Akanksha', color: '#f59e0b' },
+                                    { name: 'AI SDR', color: '#10b981' },
+                                    { name: 'Samriddhi', color: '#ec4899' },
+                                    { name: 'Rashi', color: '#8b5cf6' }
+                                ];
+                                const sdrs = currentData.sdrs && currentData.sdrs.length > 0 
+                                    ? currentData.sdrs 
+                                    : SDR_TEAM.map(s => ({ ...s, demos: 0, deals: 0, dealPoints: 0, accounts: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0 }));
+                                return (
                                 <div className="sdr-section">
                                     <div className="sdr-section-title">SDR Performance Overview</div>
                                     
@@ -2849,7 +2880,7 @@
                                     <div className="table-card" style={{marginBottom: '24px'}}>
                                         <div className="table-header">
                                             <div className="table-title">Team Performance Summary</div>
-                                        </div>
+                                            </div>
                                         <div style={{overflowX: 'auto'}}>
                                         <table className="sdr-table">
                                             <thead>
@@ -2866,15 +2897,15 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {currentData.sdrs.map((sdr, idx) => (
+                                                {sdrs.map((sdr, idx) => (
                                                     <tr key={idx}>
                                                         <td>
                                                             <div className="sdr-name-cell">
                                                                 <div className="sdr-mini-avatar" style={{background: sdr.color || '#667eea'}}>
                                                                     {sdr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                                                </div>
+                                        </div>
                                                                 <span style={{fontWeight: 500}}>{sdr.name}</span>
-                                                            </div>
+                                    </div>
                                                         </td>
                                                         <td>{formatNumber(sdr.demos)}</td>
                                                         <td>{formatNumber(sdr.deals)}</td>
@@ -2888,13 +2919,13 @@
                                                 ))}
                                             </tbody>
                                         </table>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
 
                                     {/* Individual SDR Detail Cards */}
                                     <div className="sdr-section-title">Individual SDR Details</div>
                                     <div className="sdr-grid">
-                                        {currentData.sdrs.map((sdr, idx) => (
+                                        {sdrs.map((sdr, idx) => (
                                             <div key={idx} className="sdr-card">
                                                 <div className="sdr-header">
                                                     <div className="sdr-avatar" style={{background: sdr.color || '#667eea'}}>
@@ -2935,7 +2966,8 @@
                                         ))}
                                     </div>
                                 </div>
-                            )}
+                                );
+                            })()}
                                             </div>
                         </>
                         ) : (
