@@ -642,6 +642,18 @@
         .channel-icon.conversion { background: #10b981; }
         .channel-icon.untracked { background: #64748b; }
 
+        /* Outbound channel icons */
+        .channel-icon.colddata { background: #3b82f6; }
+        .channel-icon.sociallistening { background: #8b5cf6; }
+        .channel-icon.socialmedia { background: #ec4899; }
+        .channel-icon.coldemails { background: #6366f1; }
+        .channel-icon.signups { background: #10b981; }
+        .channel-icon.subscriber { background: #f59e0b; }
+        .channel-icon.breakout { background: #ef4444; }
+        .channel-icon.adcampaign { background: #14b8a6; }
+        .channel-icon.noshow { background: #f97316; }
+        .channel-icon.dropoff { background: #dc2626; }
+
         .channel-name { font-weight: 500; color: var(--text-primary); }
 
         /* Weekly Cards */
@@ -788,7 +800,8 @@
             brand: '1qBPiHwq7yAH-le1W2rUMMma97TtDVeV9r_GHsyrEXSs',
             awareness: '1u0gIrFqEiPtsmaKF9BedN3r8eV_3JWe-2h364tdIeRk',
             all: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs',
-            leadership: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs' // Uses same overview sheet
+            leadership: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs', // Uses same overview sheet
+            outbound: '1bRp9hnQdOnppaoK6WsPdzYj2XeedO1G5TQ4iqJcIWlQ' // Independent outbound sheet
         };
         // ============================================
 
@@ -1199,6 +1212,91 @@
                 return { summary, weeks, channels, month };
             };
 
+            // Process Outbound Pod sheet data (independent structure)
+            // Based on: https://docs.google.com/spreadsheets/d/1bRp9hnQdOnppaoK6WsPdzYj2XeedO1G5TQ4iqJcIWlQ
+            const processOutboundData = (rows, month) => {
+                if (!rows || rows.length === 0) return getEmptyData(month);
+
+                // Outbound data structure - different from other pods
+                // Data types: Cold Data, MQL - Capterra, MQL - Social Listening, etc.
+                // This is an independent section - no data flows to other pods
+                
+                // Summary totals - assuming similar structure to other pods for consistency
+                // Adjust column indices based on actual sheet structure
+                const summaryCol = 14; // MTD column
+                const summary = {
+                    spend: parseValue(rows[1]?.[summaryCol]),
+                    accounts: parseValue(rows[2]?.[summaryCol]),
+                    demos: parseValue(rows[3]?.[summaryCol]),
+                    deals: parseValue(rows[4]?.[summaryCol]),
+                    dealPoints: parseValue(rows[5]?.[summaryCol]),
+                    generatedMRR: parseValue(rows[10]?.[summaryCol]),
+                    closedMRR: parseValue(rows[11]?.[summaryCol]),
+                    directConversions: parseValue(rows[12]?.[summaryCol]),
+                    directConversionsMRR: parseValue(rows[13]?.[summaryCol]),
+                    directConversionsDealPoints: parseValue(rows[14]?.[summaryCol])
+                };
+
+                // Weekly data
+                const weeks = WEEKS.map((week, idx) => {
+                    const colOffset = idx * 3 + 2;
+                    return {
+                        label: week,
+                        dates: WEEK_DATES[week],
+                        spend: parseValue(rows[1]?.[colOffset]),
+                        accounts: parseValue(rows[2]?.[colOffset]),
+                        demos: parseValue(rows[3]?.[colOffset]),
+                        deals: parseValue(rows[4]?.[colOffset]),
+                        dealPoints: parseValue(rows[5]?.[colOffset]),
+                        generatedMRR: parseValue(rows[10]?.[colOffset]),
+                        closedMRR: parseValue(rows[11]?.[colOffset]),
+                        directConversions: parseValue(rows[12]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[13]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[colOffset])
+                    };
+                });
+
+                // Outbound data source channels
+                const channels = [];
+                const outboundChannels = [
+                    'Cold Data',
+                    'MQL - Capterra',
+                    'MQL - Social Listening',
+                    'MQL - Social Media Engaged',
+                    'MQL - Cold Emails',
+                    'MQL - Sign Ups',
+                    'MQL - Subscriber Data',
+                    'MQL - Breakout Leads',
+                    'MQL - Ad Campaign Data',
+                    'MQL - Demo No Show',
+                    'MQL - Demo Dropoff'
+                ];
+                const outboundIcons = ['colddata', 'capterra', 'sociallistening', 'socialmedia', 'coldemails', 'signups', 'subscriber', 'breakout', 'adcampaign', 'noshow', 'dropoff'];
+                const outboundShorts = ['CD', 'CT', 'SL', 'SM', 'CE', 'SU', 'SD', 'BL', 'AC', 'NS', 'DO'];
+                
+                outboundChannels.forEach((name, idx) => {
+                    const colOffset = idx * 3 + 2;
+                    channels.push({
+                        name,
+                        icon: outboundIcons[idx],
+                        short: outboundShorts[idx],
+                        spend: parseValue(rows[18]?.[colOffset]),
+                        accounts: parseValue(rows[19]?.[colOffset]),
+                        demos: parseValue(rows[20]?.[colOffset]),
+                        deals: parseValue(rows[21]?.[colOffset]),
+                        dealPoints: parseValue(rows[22]?.[colOffset]),
+                        generatedMRR: parseValue(rows[27]?.[colOffset]),
+                        closedMRR: parseValue(rows[28]?.[colOffset]),
+                        directConversions: parseValue(rows[29]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[30]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[31]?.[colOffset]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    });
+                });
+
+                return { summary, weeks, channels, month };
+            };
+
             // Process All Pods Overview sheet (different structure - Overview tab)
             const processAllPodsData = (rows, month) => {
                 if (!rows || rows.length === 0) return getEmptyData(month);
@@ -1583,9 +1681,18 @@
 
             const fetchMonthData = async (month, spreadsheetId, podKey) => {
                 try {
-                    // All Pods uses Overview tab, not monthly tabs
-                    const range = podKey === 'all' ? 'Overview!A1:O35' : `${month}!A1:AZ100`;
-                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${API_KEY}`;
+                    // Determine the correct range/tab name based on pod
+                    let range;
+                    if (podKey === 'all') {
+                        range = 'Overview!A1:O35';
+                    } else if (podKey === 'outbound') {
+                        // Outbound uses "January 2026" format for tabs
+                        range = `${month} 2026!A1:AZ100`;
+                    } else {
+                        range = `${month}!A1:AZ100`;
+                    }
+                    
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${API_KEY}`;
                     const response = await fetch(url);
                     
                     if (!response.ok) {
@@ -1601,6 +1708,8 @@
                         return processBrandAdvocacyData(result.values, month);
                     } else if (podKey === 'awareness') {
                         return processAwarenessData(result.values, month);
+                    } else if (podKey === 'outbound') {
+                        return processOutboundData(result.values, month);
                     }
                     return processSheetData(result.values, month);
                 } catch (err) {
@@ -1609,11 +1718,13 @@
                 }
             };
 
-            const checkAvailableMonths = async (spreadsheetId) => {
+            const checkAvailableMonths = async (spreadsheetId, podKey) => {
                 const available = [];
                 for (const month of MONTHS) {
                     try {
-                        const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${month.key}!A1:A1?key=${API_KEY}`;
+                        // Outbound uses "January 2026" format, others use "January"
+                        const tabName = podKey === 'outbound' ? `${month.key} 2026` : month.key;
+                        const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName)}!A1:A1?key=${API_KEY}`;
                         const response = await fetch(url);
                         if (response.ok) available.push(month.key);
                     } catch (err) { /* Month doesn't exist */ }
@@ -1742,23 +1853,23 @@
                         setSelectedMonth('All Time');
                         setData({ 'All Time': overviewData || getEmptyData('All Time') });
                     } else {
-                        const available = await checkAvailableMonths(spreadsheetId);
-                        setAvailableMonths(available);
+                        const available = await checkAvailableMonths(spreadsheetId, podKey);
+                    setAvailableMonths(available);
 
-                        const allData = {};
-                        for (const month of available) {
+                    const allData = {};
+                    for (const month of available) {
                             const monthData = await fetchMonthData(month, spreadsheetId, podKey);
-                            if (monthData) allData[month] = monthData;
-                        }
+                        if (monthData) allData[month] = monthData;
+                    }
 
-                        if (Object.keys(allData).length === 0) {
-                            allData['January'] = getEmptyData('January');
-                        }
+                    if (Object.keys(allData).length === 0) {
+                        allData['January'] = getEmptyData('January');
+                    }
 
                         // Create Overview aggregation
                         allData['Overview'] = aggregateMonthsData(allData);
 
-                        setData(allData);
+                    setData(allData);
                         // Default to Overview when switching pods
                         if (selectedMonth !== 'Overview' && !available.includes(selectedMonth)) {
                             setSelectedMonth('Overview');
@@ -1984,7 +2095,7 @@
                                 <div className="sidebar-section-title">Pods</div>
                                 <div className="pod-list">
                                     {PODS.map(pod => (
-                                        <button
+                                            <button
                                             key={pod.key}
                                             className={`pod-item ${selectedPod === pod.key ? 'active' : ''}`}
                                             onClick={() => setSelectedPod(pod.key)}
@@ -1993,7 +2104,7 @@
                                                 {Icons[pod.icon]}
                                             </div>
                                             <span>{pod.label}</span>
-                                        </button>
+                                            </button>
                                     ))}
                                 </div>
                             </div>
@@ -2073,27 +2184,27 @@
                             {/* All-Time Summary Metrics */}
                             <div className="leadership-section">
                                 <div className="leadership-section-title">All-Time Totals (All Pods Combined)</div>
-                                <div className="summary-grid">
-                                    <div className="summary-card">
-                                        <div className="summary-icon spend">{Icons.dollar}</div>
+                            <div className="summary-grid">
+                                <div className="summary-card">
+                                    <div className="summary-icon spend">{Icons.dollar}</div>
                                         <div className="summary-label">Spend</div>
-                                        <div className="summary-value">{formatCurrency(displaySummary.spend)}</div>
-                                    </div>
-                                    <div className="summary-card">
-                                        <div className="summary-icon accounts">{Icons.users}</div>
-                                        <div className="summary-label">Accounts</div>
-                                        <div className="summary-value">{formatNumber(displaySummary.accounts)}</div>
-                                    </div>
-                                    <div className="summary-card">
-                                        <div className="summary-icon demos">{Icons.calendar}</div>
-                                        <div className="summary-label">Demos</div>
-                                        <div className="summary-value">{formatNumber(displaySummary.demos)}</div>
-                                    </div>
-                                    <div className="summary-card">
-                                        <div className="summary-icon deals">{Icons.target}</div>
-                                        <div className="summary-label">Deals</div>
-                                        <div className="summary-value">{formatNumber(displaySummary.deals)}</div>
-                                    </div>
+                                    <div className="summary-value">{formatCurrency(displaySummary.spend)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon accounts">{Icons.users}</div>
+                                    <div className="summary-label">Accounts</div>
+                                    <div className="summary-value">{formatNumber(displaySummary.accounts)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon demos">{Icons.calendar}</div>
+                                    <div className="summary-label">Demos</div>
+                                    <div className="summary-value">{formatNumber(displaySummary.demos)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon deals">{Icons.target}</div>
+                                    <div className="summary-label">Deals</div>
+                                    <div className="summary-value">{formatNumber(displaySummary.deals)}</div>
+                                </div>
                                     <div className="summary-card">
                                         <div className="summary-icon dealpoints">{Icons.star}</div>
                                         <div className="summary-label">Deal Points</div>
@@ -2118,11 +2229,11 @@
                                         <div className="summary-icon cpdealpt">{Icons.percent}</div>
                                         <div className="summary-label">Cost Per Deal Point</div>
                                         <div className="summary-value">{formatCurrency(costPerDealPoint)}</div>
-                                    </div>
-                                    <div className="summary-card">
-                                        <div className="summary-icon mrr">{Icons.trending}</div>
-                                        <div className="summary-label">Generated MRR</div>
-                                        <div className="summary-value">{formatCurrency(displaySummary.generatedMRR)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon mrr">{Icons.trending}</div>
+                                    <div className="summary-label">Generated MRR</div>
+                                    <div className="summary-value">{formatCurrency(displaySummary.generatedMRR)}</div>
                                     </div>
                                     <div className="summary-card">
                                         <div className="summary-icon closedmrr">{Icons.check}</div>
