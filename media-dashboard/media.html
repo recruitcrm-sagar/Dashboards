@@ -133,6 +133,133 @@
         .pod-icon.untracked { background: #e2e8f0; color: #64748b; }
         .pod-icon.leadership { background: #fef3c7; color: #b45309; }
 
+        /* Leadership Dashboard Styles */
+        .leadership-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .leadership-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .leadership-section {
+            margin-bottom: 32px;
+        }
+
+        .leadership-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pod-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .pod-badge.awareness { background: #fef3c7; color: #d97706; }
+        .pod-badge.brand { background: #fce7f3; color: #db2777; }
+        .pod-badge.conversion { background: #d1fae5; color: #059669; }
+        .pod-badge.untracked { background: #e2e8f0; color: #64748b; }
+
+        .pod-totals-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .pod-total-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .pod-total-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .pod-total-card.awareness { border-left: 4px solid #d97706; }
+        .pod-total-card.brand { border-left: 4px solid #db2777; }
+        .pod-total-card.conversion { border-left: 4px solid #059669; }
+        .pod-total-card.untracked { border-left: 4px solid #64748b; }
+
+        .pod-total-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .pod-total-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pod-total-icon.awareness { background: #fef3c7; color: #d97706; }
+        .pod-total-icon.brand { background: #fce7f3; color: #db2777; }
+        .pod-total-icon.conversion { background: #d1fae5; color: #059669; }
+        .pod-total-icon.untracked { background: #e2e8f0; color: #64748b; }
+
+        .pod-total-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .pod-total-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .pod-metric {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .pod-metric-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .pod-metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .channel-pod-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
         .empty-state {
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
@@ -603,7 +730,8 @@
             conversion: '1Rq85bACiKxewmW9vpsZ7vTZYTnkMBYsGxOzhxj_m_WE',
             brand: '1qBPiHwq7yAH-le1W2rUMMma97TtDVeV9r_GHsyrEXSs',
             awareness: '1u0gIrFqEiPtsmaKF9BedN3r8eV_3JWe-2h364tdIeRk',
-            all: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs'
+            all: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs',
+            leadership: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs' // Uses same overview sheet
         };
         // ============================================
 
@@ -1121,6 +1249,271 @@
                 return { summary, weeks, channels, month: 'All Time' };
             };
 
+            // Process Leadership data - All-time aggregated from All Pods sheet plus all channels from each pod
+            const processLeadershipData = (allPodsRows, conversionRows, brandRows, awarenessRows) => {
+                // Use All Pods summary for all-time totals (column B, index 1)
+                const summary = {
+                    spend: parseValue(allPodsRows[1]?.[1]),
+                    accounts: parseValue(allPodsRows[2]?.[1]),
+                    demos: parseValue(allPodsRows[3]?.[1]),
+                    deals: parseValue(allPodsRows[4]?.[1]),
+                    dealPoints: parseValue(allPodsRows[5]?.[1]),
+                    generatedMRR: parseValue(allPodsRows[10]?.[1]),
+                    closedMRR: parseValue(allPodsRows[11]?.[1]),
+                    directConversions: parseValue(allPodsRows[12]?.[1]),
+                    directConversionsMRR: parseValue(allPodsRows[13]?.[1]),
+                    directConversionsDealPoints: parseValue(allPodsRows[14]?.[1])
+                };
+
+                // Monthly trend data for the chart
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const weeks = monthNames.slice(0, 6).map((m, idx) => {
+                    const colOffset = idx + 2;
+                    return {
+                        label: m,
+                        dates: `${m} 2026`,
+                        spend: parseValue(allPodsRows[19]?.[colOffset]),
+                        accounts: parseValue(allPodsRows[20]?.[colOffset]),
+                        demos: parseValue(allPodsRows[21]?.[colOffset]),
+                        deals: parseValue(allPodsRows[22]?.[colOffset]),
+                        dealPoints: parseValue(allPodsRows[23]?.[colOffset]),
+                        generatedMRR: parseValue(allPodsRows[28]?.[colOffset]),
+                        closedMRR: parseValue(allPodsRows[29]?.[colOffset]),
+                        directConversions: parseValue(allPodsRows[30]?.[colOffset]),
+                        directConversionsMRR: parseValue(allPodsRows[31]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(allPodsRows[32]?.[colOffset])
+                    };
+                });
+
+                // Pod summary breakdown from All Pods sheet
+                const podChannels = [
+                    {
+                        name: 'Awareness Pod (Total)',
+                        icon: 'awareness',
+                        short: 'AW',
+                        pod: 'Awareness',
+                        spend: parseValue(allPodsRows[1]?.[4]),
+                        accounts: parseValue(allPodsRows[2]?.[4]),
+                        demos: parseValue(allPodsRows[3]?.[4]),
+                        deals: parseValue(allPodsRows[4]?.[4]),
+                        dealPoints: parseValue(allPodsRows[5]?.[4]),
+                        generatedMRR: parseValue(allPodsRows[10]?.[4]),
+                        closedMRR: parseValue(allPodsRows[11]?.[4]),
+                        directConversions: parseValue(allPodsRows[12]?.[4]),
+                        directConversionsMRR: parseValue(allPodsRows[13]?.[4]),
+                        directConversionsDealPoints: parseValue(allPodsRows[14]?.[4]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    },
+                    {
+                        name: 'Brand Advocacy Pod (Total)',
+                        icon: 'brand',
+                        short: 'BA',
+                        pod: 'Brand',
+                        spend: parseValue(allPodsRows[1]?.[6]),
+                        accounts: parseValue(allPodsRows[2]?.[6]),
+                        demos: parseValue(allPodsRows[3]?.[6]),
+                        deals: parseValue(allPodsRows[4]?.[6]),
+                        dealPoints: parseValue(allPodsRows[5]?.[6]),
+                        generatedMRR: parseValue(allPodsRows[10]?.[6]),
+                        closedMRR: parseValue(allPodsRows[11]?.[6]),
+                        directConversions: parseValue(allPodsRows[12]?.[6]),
+                        directConversionsMRR: parseValue(allPodsRows[13]?.[6]),
+                        directConversionsDealPoints: parseValue(allPodsRows[14]?.[6]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    },
+                    {
+                        name: 'Conversion Pod (Total)',
+                        icon: 'conversion',
+                        short: 'CV',
+                        pod: 'Conversion',
+                        spend: parseValue(allPodsRows[1]?.[8]),
+                        accounts: parseValue(allPodsRows[2]?.[8]),
+                        demos: parseValue(allPodsRows[3]?.[8]),
+                        deals: parseValue(allPodsRows[4]?.[8]),
+                        dealPoints: parseValue(allPodsRows[5]?.[8]),
+                        generatedMRR: parseValue(allPodsRows[10]?.[8]),
+                        closedMRR: parseValue(allPodsRows[11]?.[8]),
+                        directConversions: parseValue(allPodsRows[12]?.[8]),
+                        directConversionsMRR: parseValue(allPodsRows[13]?.[8]),
+                        directConversionsDealPoints: parseValue(allPodsRows[14]?.[8]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    },
+                    {
+                        name: 'Untracked Pod (Total)',
+                        icon: 'untracked',
+                        short: 'UT',
+                        pod: 'Untracked',
+                        spend: parseValue(allPodsRows[1]?.[10]),
+                        accounts: parseValue(allPodsRows[2]?.[10]),
+                        demos: parseValue(allPodsRows[3]?.[10]),
+                        deals: parseValue(allPodsRows[4]?.[10]),
+                        dealPoints: parseValue(allPodsRows[5]?.[10]),
+                        generatedMRR: parseValue(allPodsRows[10]?.[10]),
+                        closedMRR: parseValue(allPodsRows[11]?.[10]),
+                        directConversions: parseValue(allPodsRows[12]?.[10]),
+                        directConversionsMRR: parseValue(allPodsRows[13]?.[10]),
+                        directConversionsDealPoints: parseValue(allPodsRows[14]?.[10]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    }
+                ];
+
+                // Parse Conversion Pod channels
+                const conversionChannels = [];
+                if (conversionRows && conversionRows.length > 0) {
+                    const group1Names = ['Google Search Ads', 'Bing Search Ads', 'Reddit Ads', 'LinkedIn Ads', 'Facebook Ads'];
+                    const group1Icons = ['google', 'bing', 'reddit', 'linkedin', 'facebook'];
+                    const group1Shorts = ['G', 'B', 'R', 'in', 'f'];
+                    
+                    group1Names.forEach((name, idx) => {
+                        const colOffset = idx * 3 + 3;
+                        conversionChannels.push({
+                            name,
+                            icon: group1Icons[idx],
+                            short: group1Shorts[idx],
+                            pod: 'Conversion',
+                            spend: parseValue(conversionRows[18]?.[colOffset]),
+                            accounts: parseValue(conversionRows[19]?.[colOffset]),
+                            demos: parseValue(conversionRows[20]?.[colOffset]),
+                            deals: parseValue(conversionRows[21]?.[colOffset]),
+                            dealPoints: parseValue(conversionRows[22]?.[colOffset]),
+                            generatedMRR: parseValue(conversionRows[27]?.[colOffset]),
+                            closedMRR: parseValue(conversionRows[28]?.[colOffset]),
+                            directConversions: parseValue(conversionRows[29]?.[colOffset]),
+                            directConversionsMRR: parseValue(conversionRows[30]?.[colOffset]),
+                            directConversionsDealPoints: parseValue(conversionRows[31]?.[colOffset]),
+                            cpc: parseValue(conversionRows[32]?.[colOffset]),
+                            clicks: parseValue(conversionRows[33]?.[colOffset]),
+                            impressions: parseValue(conversionRows[34]?.[colOffset]),
+                            ctr: parseValue(conversionRows[35]?.[colOffset])
+                        });
+                    });
+
+                    const group2Names = ['Microsoft Display Ads', 'YouTube Ads', 'Capterra CPC', 'RevLeads CPC', 'Select Software Reviews'];
+                    const group2Icons = ['microsoft', 'youtube', 'capterra', 'revleads', 'selectsoftware'];
+                    const group2Shorts = ['M', '▶', 'C', 'R', 'S'];
+                    
+                    group2Names.forEach((name, idx) => {
+                        const colOffset = idx * 3 + 3;
+                        conversionChannels.push({
+                            name,
+                            icon: group2Icons[idx],
+                            short: group2Shorts[idx],
+                            pod: 'Conversion',
+                            spend: parseValue(conversionRows[38]?.[colOffset]),
+                            accounts: parseValue(conversionRows[39]?.[colOffset]),
+                            demos: parseValue(conversionRows[40]?.[colOffset]),
+                            deals: parseValue(conversionRows[41]?.[colOffset]),
+                            dealPoints: parseValue(conversionRows[42]?.[colOffset]),
+                            generatedMRR: parseValue(conversionRows[47]?.[colOffset]),
+                            closedMRR: parseValue(conversionRows[48]?.[colOffset]),
+                            directConversions: parseValue(conversionRows[49]?.[colOffset]),
+                            directConversionsMRR: parseValue(conversionRows[50]?.[colOffset]),
+                            directConversionsDealPoints: parseValue(conversionRows[51]?.[colOffset]),
+                            cpc: parseValue(conversionRows[52]?.[colOffset]),
+                            clicks: parseValue(conversionRows[53]?.[colOffset]),
+                            impressions: parseValue(conversionRows[54]?.[colOffset]),
+                            ctr: parseValue(conversionRows[55]?.[colOffset])
+                        });
+                    });
+
+                    const group3Names = ['Forbes CPL', 'Capterra CPL', 'Outbound - MQL Data', 'Outbound - Cold Data', 'Affiliate', 'Email'];
+                    const group3Icons = ['forbes', 'capterracpl', 'outboundmql', 'outboundcold', 'affiliate', 'email'];
+                    const group3Shorts = ['F', 'C', 'M', 'O', 'A', 'E'];
+                    
+                    group3Names.forEach((name, idx) => {
+                        const colOffset = idx * 3 + 3;
+                        conversionChannels.push({
+                            name,
+                            icon: group3Icons[idx],
+                            short: group3Shorts[idx],
+                            pod: 'Conversion',
+                            spend: parseValue(conversionRows[58]?.[colOffset]),
+                            accounts: parseValue(conversionRows[59]?.[colOffset]),
+                            demos: parseValue(conversionRows[60]?.[colOffset]),
+                            deals: parseValue(conversionRows[61]?.[colOffset]),
+                            dealPoints: parseValue(conversionRows[62]?.[colOffset]),
+                            generatedMRR: parseValue(conversionRows[67]?.[colOffset]),
+                            closedMRR: parseValue(conversionRows[68]?.[colOffset]),
+                            directConversions: parseValue(conversionRows[69]?.[colOffset]),
+                            directConversionsMRR: parseValue(conversionRows[70]?.[colOffset]),
+                            directConversionsDealPoints: parseValue(conversionRows[71]?.[colOffset]),
+                            cpc: parseValue(conversionRows[72]?.[colOffset]),
+                            clicks: parseValue(conversionRows[73]?.[colOffset]),
+                            impressions: parseValue(conversionRows[74]?.[colOffset]),
+                            ctr: parseValue(conversionRows[75]?.[colOffset])
+                        });
+                    });
+                }
+
+                // Parse Brand Advocacy Pod channels
+                const brandChannels = [];
+                if (brandRows && brandRows.length > 0) {
+                    const brandNames = ['G2 Sponsored', 'Capterra PPL', 'GetApp PPL', 'Software Advice', 'G2 Buyer Intent'];
+                    const brandIcons = ['g2', 'capterra', 'getapp', 'softwareadvice', 'g2intent'];
+                    const brandShorts = ['G2', 'CT', 'GA', 'SA', 'BI'];
+                    
+                    brandNames.forEach((name, idx) => {
+                        const colOffset = idx * 3 + 3;
+                        brandChannels.push({
+                            name,
+                            icon: brandIcons[idx],
+                            short: brandShorts[idx],
+                            pod: 'Brand',
+                            spend: parseValue(brandRows[18]?.[colOffset]),
+                            accounts: parseValue(brandRows[19]?.[colOffset]),
+                            demos: parseValue(brandRows[20]?.[colOffset]),
+                            deals: parseValue(brandRows[21]?.[colOffset]),
+                            dealPoints: parseValue(brandRows[22]?.[colOffset]),
+                            generatedMRR: parseValue(brandRows[27]?.[colOffset]),
+                            closedMRR: parseValue(brandRows[28]?.[colOffset]),
+                            directConversions: parseValue(brandRows[29]?.[colOffset]),
+                            directConversionsMRR: parseValue(brandRows[30]?.[colOffset]),
+                            directConversionsDealPoints: parseValue(brandRows[31]?.[colOffset]),
+                            cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                        });
+                    });
+                }
+
+                // Parse Awareness Pod channels
+                const awarenessChannels = [];
+                if (awarenessRows && awarenessRows.length > 0) {
+                    const awarenessNames = ['Google Display', 'Facebook Awareness', 'LinkedIn Awareness', 'YouTube Awareness', 'Twitter/X Ads'];
+                    const awarenessIcons = ['google', 'facebook', 'linkedin', 'youtube', 'twitter'];
+                    const awarenessShorts = ['GD', 'FA', 'LA', 'YA', 'X'];
+                    
+                    awarenessNames.forEach((name, idx) => {
+                        const colOffset = idx * 3 + 3;
+                        awarenessChannels.push({
+                            name,
+                            icon: awarenessIcons[idx],
+                            short: awarenessShorts[idx],
+                            pod: 'Awareness',
+                            spend: parseValue(awarenessRows[18]?.[colOffset]),
+                            accounts: parseValue(awarenessRows[19]?.[colOffset]),
+                            demos: parseValue(awarenessRows[20]?.[colOffset]),
+                            deals: parseValue(awarenessRows[21]?.[colOffset]),
+                            dealPoints: parseValue(awarenessRows[22]?.[colOffset]),
+                            generatedMRR: parseValue(awarenessRows[27]?.[colOffset]),
+                            closedMRR: parseValue(awarenessRows[28]?.[colOffset]),
+                            directConversions: parseValue(awarenessRows[29]?.[colOffset]),
+                            directConversionsMRR: parseValue(awarenessRows[30]?.[colOffset]),
+                            directConversionsDealPoints: parseValue(awarenessRows[31]?.[colOffset]),
+                            cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                        });
+                    });
+                }
+
+                // Combine all channels with pod totals first, then individual channels
+                const allChannels = [
+                    ...podChannels,
+                    ...conversionChannels,
+                    ...brandChannels,
+                    ...awarenessChannels
+                ];
+
+                return { summary, weeks, channels: allChannels, podChannels, month: 'All Time' };
+            };
+
             const getEmptyData = (month) => ({
                 summary: { spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 },
                 weeks: WEEKS.map(week => ({ label: week, dates: WEEK_DATES[week], spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 })),
@@ -1168,6 +1561,41 @@
                 return available.length > 0 ? available : ['January'];
             };
 
+            // Fetch Leadership data from all pods
+            const fetchLeadershipData = async () => {
+                try {
+                    // Fetch All Pods overview
+                    const allPodsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.all}/values/Overview!A1:O35?key=${API_KEY}`;
+                    const allPodsResponse = await fetch(allPodsUrl);
+                    const allPodsResult = allPodsResponse.ok ? await allPodsResponse.json() : { values: [] };
+
+                    // Fetch January data from each pod to get all-time channel totals
+                    const conversionUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.conversion}/values/January!A1:AZ100?key=${API_KEY}`;
+                    const brandUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.brand}/values/January!A1:AZ100?key=${API_KEY}`;
+                    const awarenessUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.awareness}/values/January!A1:AZ100?key=${API_KEY}`;
+
+                    const [conversionResp, brandResp, awarenessResp] = await Promise.all([
+                        fetch(conversionUrl),
+                        fetch(brandUrl),
+                        fetch(awarenessUrl)
+                    ]);
+
+                    const conversionResult = conversionResp.ok ? await conversionResp.json() : { values: [] };
+                    const brandResult = brandResp.ok ? await brandResp.json() : { values: [] };
+                    const awarenessResult = awarenessResp.ok ? await awarenessResp.json() : { values: [] };
+
+                    return processLeadershipData(
+                        allPodsResult.values || [],
+                        conversionResult.values || [],
+                        brandResult.values || [],
+                        awarenessResult.values || []
+                    );
+                } catch (err) {
+                    console.error('Error fetching leadership data:', err);
+                    return null;
+                }
+            };
+
             const fetchAllData = async (podKey = selectedPod) => {
                 const spreadsheetId = POD_SPREADSHEETS[podKey];
                 if (!spreadsheetId) {
@@ -1180,8 +1608,15 @@
 
                 setRefreshing(true);
                 try {
+                    // Leadership pod - fetch aggregated all-time data from all pods
+                    if (podKey === 'leadership') {
+                        const leadershipData = await fetchLeadershipData();
+                        setAvailableMonths(['All Time']);
+                        setSelectedMonth('All Time');
+                        setData({ 'All Time': leadershipData || getEmptyData('All Time') });
+                    }
                     // All Pods uses Overview tab, not monthly tabs
-                    if (podKey === 'all') {
+                    else if (podKey === 'all') {
                         const overviewData = await fetchMonthData('Overview', spreadsheetId, podKey);
                         setAvailableMonths(['All Time']);
                         setSelectedMonth('All Time');
@@ -1480,7 +1915,7 @@
 
                     <main className="main-content">
                         <div className="topbar">
-                            <div className="page-title">{PODS.find(p => p.key === selectedPod)?.label} — {selectedMonth} 2026</div>
+                            <div className="page-title">{PODS.find(p => p.key === selectedPod)?.label} — {selectedPod === 'leadership' || selectedPod === 'all' ? 'All Time' : `${selectedMonth} 2026`}</div>
                             <div className="topbar-right">
                                 <button className={`btn-icon ${refreshing ? 'spinning' : ''}`} onClick={() => fetchAllData(selectedPod)} disabled={refreshing} title="Refresh data">
                                     {Icons.refresh}
@@ -1488,7 +1923,279 @@
                             </div>
                         </div>
 
-                        {POD_SPREADSHEETS[selectedPod] ? (
+                        {selectedPod === 'leadership' && currentData.channels ? (
+                        <>
+                        <div className="filter-bar">
+                            <div className="leadership-header">
+                                <div className="leadership-title">All-Time Performance Overview</div>
+                            </div>
+                            <div style={{flex: 1}}></div>
+                            {lastUpdated && <span className="filter-label">Updated: {lastUpdated.toLocaleTimeString()}</span>}
+                        </div>
+
+                        <div className="content-area">
+                            {/* All-Time Summary Metrics */}
+                            <div className="leadership-section">
+                                <div className="leadership-section-title">All-Time Totals (All Pods Combined)</div>
+                                <div className="summary-grid">
+                                    <div className="summary-card">
+                                        <div className="summary-icon spend">{Icons.dollar}</div>
+                                        <div className="summary-label">Spend</div>
+                                        <div className="summary-value">{formatCurrency(displaySummary.spend)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon accounts">{Icons.users}</div>
+                                        <div className="summary-label">Accounts</div>
+                                        <div className="summary-value">{formatNumber(displaySummary.accounts)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon demos">{Icons.calendar}</div>
+                                        <div className="summary-label">Demos</div>
+                                        <div className="summary-value">{formatNumber(displaySummary.demos)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon deals">{Icons.target}</div>
+                                        <div className="summary-label">Deals</div>
+                                        <div className="summary-value">{formatNumber(displaySummary.deals)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon dealpoints">{Icons.star}</div>
+                                        <div className="summary-label">Deal Points</div>
+                                        <div className="summary-value">{formatNumber(displaySummary.dealPoints)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon cpaccount">{Icons.percent}</div>
+                                        <div className="summary-label">Cost Per Account</div>
+                                        <div className="summary-value">{formatCurrency(costPerAccount)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon cpa">{Icons.percent}</div>
+                                        <div className="summary-label">Cost Per Demo</div>
+                                        <div className="summary-value">{formatCurrency(costPerDemo)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon cpdeal">{Icons.percent}</div>
+                                        <div className="summary-label">Cost Per Deal</div>
+                                        <div className="summary-value">{formatCurrency(costPerDeal)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon cpdealpt">{Icons.percent}</div>
+                                        <div className="summary-label">Cost Per Deal Point</div>
+                                        <div className="summary-value">{formatCurrency(costPerDealPoint)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon mrr">{Icons.trending}</div>
+                                        <div className="summary-label">Generated MRR</div>
+                                        <div className="summary-value">{formatCurrency(displaySummary.generatedMRR)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon closedmrr">{Icons.check}</div>
+                                        <div className="summary-label">Closed MRR</div>
+                                        <div className="summary-value">{formatCurrency(displaySummary.closedMRR)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon directconv">{Icons.arrowUp}</div>
+                                        <div className="summary-label">Direct Conversions</div>
+                                        <div className="summary-value">{formatNumber(displaySummary.directConversions)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon directmrr">{Icons.award}</div>
+                                        <div className="summary-label">Direct Conv. MRR</div>
+                                        <div className="summary-value">{formatCurrency(displaySummary.directConversionsMRR)}</div>
+                                    </div>
+                                    <div className="summary-card">
+                                        <div className="summary-icon directdp">{Icons.star}</div>
+                                        <div className="summary-label">Direct Conv. Deal Pts</div>
+                                        <div className="summary-value">{formatNumber(displaySummary.directConversionsDealPoints)}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Pod Breakdown */}
+                            <div className="leadership-section">
+                                <div className="leadership-section-title">Pod Performance Breakdown</div>
+                                <div className="pod-totals-grid">
+                                    {currentData.channels?.filter(ch => ch.name.includes('(Total)')).map((pod, idx) => (
+                                        <div key={idx} className={`pod-total-card ${pod.icon}`}>
+                                            <div className="pod-total-header">
+                                                <div className={`pod-total-icon ${pod.icon}`}>
+                                                    {Icons[pod.icon === 'awareness' ? 'eye' : pod.icon === 'brand' ? 'heart' : pod.icon === 'conversion' ? 'zap' : 'help']}
+                                                </div>
+                                                <div className="pod-total-name">{pod.name.replace(' (Total)', '')}</div>
+                                            </div>
+                                            <div className="pod-total-metrics">
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Spend</div>
+                                                    <div className="pod-metric-value">{formatCurrency(pod.spend)}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Deals</div>
+                                                    <div className="pod-metric-value">{formatNumber(pod.deals)}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Deal Points</div>
+                                                    <div className="pod-metric-value">{formatNumber(pod.dealPoints)}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Gen. MRR</div>
+                                                    <div className="pod-metric-value">{formatCurrency(pod.generatedMRR)}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Closed MRR</div>
+                                                    <div className="pod-metric-value">{formatCurrency(pod.closedMRR)}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Dir. Conv.</div>
+                                                    <div className="pod-metric-value">{formatNumber(pod.directConversions)}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Monthly Trend Charts */}
+                            <div className="charts-grid">
+                                <div className="chart-card">
+                                    <div className="chart-header">
+                                        <div className="chart-title">Monthly Performance by Pod</div>
+                                        <div className="chart-controls">
+                                            <select className="chart-metric-select" value={chartMetric} onChange={(e) => setChartMetric(e.target.value)}>
+                                                {CHART_METRICS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="chart-container">
+                                        <canvas ref={trendChartRef}></canvas>
+                                    </div>
+                                </div>
+                                <div className="chart-card">
+                                    <div className="chart-header">
+                                        <div className="chart-title">Monthly Trend</div>
+                                    </div>
+                                    <div className="chart-container">
+                                        <canvas ref={channelChartRef}></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* All Channels from All Pods Table */}
+                            <div className="leadership-section">
+                                <div className="leadership-section-title">All Channels (All Pods)</div>
+                                <div className="table-card">
+                                    <div className="table-header">
+                                        <div className="table-title">Channel Performance by Pod</div>
+                                        <input
+                                            type="text"
+                                            className="search-input"
+                                            placeholder="Search channels..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                    <div style={{overflowX: 'auto'}}>
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th onClick={() => handleSort('name')}>Channel</th>
+                                                <th>Pod</th>
+                                                <th onClick={() => handleSort('spend')}>Spend</th>
+                                                <th onClick={() => handleSort('accounts')}>Accounts</th>
+                                                <th onClick={() => handleSort('demos')}>Demos</th>
+                                                <th onClick={() => handleSort('deals')}>Deals</th>
+                                                <th onClick={() => handleSort('dealPoints')}>Deal Pts</th>
+                                                <th>CPA</th>
+                                                <th>CPD</th>
+                                                <th onClick={() => handleSort('generatedMRR')}>Gen. MRR</th>
+                                                <th onClick={() => handleSort('closedMRR')}>Closed MRR</th>
+                                                <th onClick={() => handleSort('directConversions')}>Dir. Conv</th>
+                                                <th onClick={() => handleSort('directConversionsMRR')}>Dir. MRR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredChannels.filter(ch => !ch.name.includes('(Total)')).map((channel, idx) => {
+                                                const cpa = channel.accounts > 0 ? channel.spend / channel.accounts : 0;
+                                                const cpd = channel.demos > 0 ? channel.spend / channel.demos : 0;
+                                                return (
+                                                    <tr key={idx}>
+                                                        <td>
+                                                            <div className="channel-cell">
+                                                                <div className={`channel-icon ${channel.icon}`}>{channel.short}</div>
+                                                                <span className="channel-name">{channel.name}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <span className={`pod-badge ${channel.pod?.toLowerCase()}`}>
+                                                                {channel.pod}
+                                                            </span>
+                                                        </td>
+                                                        <td>{formatCurrency(channel.spend)}</td>
+                                                        <td>{formatNumber(channel.accounts)}</td>
+                                                        <td>{formatNumber(channel.demos)}</td>
+                                                        <td>{formatNumber(channel.deals)}</td>
+                                                        <td>{formatNumber(channel.dealPoints)}</td>
+                                                        <td>{cpa > 0 ? formatCurrency(cpa) : '—'}</td>
+                                                        <td>{cpd > 0 ? formatCurrency(cpd) : '—'}</td>
+                                                        <td>{formatCurrency(channel.generatedMRR)}</td>
+                                                        <td>{formatCurrency(channel.closedMRR)}</td>
+                                                        <td>{formatNumber(channel.directConversions)}</td>
+                                                        <td>{formatCurrency(channel.directConversionsMRR)}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Monthly Cards */}
+                            <div className="leadership-section">
+                                <div className="leadership-section-title">Monthly Breakdown</div>
+                                <div className="weekly-grid">
+                                    {currentData.weeks?.map((week, idx) => {
+                                        const prevWeek = idx > 0 ? currentData.weeks[idx - 1] : null;
+                                        const renderMetric = (label, value, prevValue, isCurrency = false) => {
+                                            const growth = prevWeek ? calcGrowth(value, prevValue) : null;
+                                            return (
+                                                <div className="week-metric">
+                                                    <div className="week-metric-label">{label}</div>
+                                                    <div className="week-metric-row">
+                                                        <div className="week-metric-value">{isCurrency ? formatCurrency(value) : formatNumber(value)}</div>
+                                                        {growth && growth.direction !== 'neutral' && (
+                                                            <span className={`growth-indicator ${growth.direction}`}>
+                                                                {growth.direction === 'up' ? Icons.trendUp : Icons.trendDown}
+                                                                {growth.percent}%
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        };
+                                        return (
+                                        <div key={idx} className="week-card">
+                                            <div className="week-card-header">
+                                                <div className="week-label">{week.label}</div>
+                                                <div className="week-dates">{week.dates}</div>
+                                            </div>
+                                            <div className="week-metrics">
+                                                {renderMetric('Spend', week.spend, prevWeek?.spend, true)}
+                                                {renderMetric('Accounts', week.accounts, prevWeek?.accounts)}
+                                                {renderMetric('Demos', week.demos, prevWeek?.demos)}
+                                                {renderMetric('Deals', week.deals, prevWeek?.deals)}
+                                                {renderMetric('Deal Pts', week.dealPoints, prevWeek?.dealPoints)}
+                                                {renderMetric('Gen. MRR', week.generatedMRR, prevWeek?.generatedMRR, true)}
+                                                {renderMetric('Closed MRR', week.closedMRR, prevWeek?.closedMRR, true)}
+                                                {renderMetric('Dir. Conv', week.directConversions, prevWeek?.directConversions)}
+                                            </div>
+                                        </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                        </>
+                        ) : POD_SPREADSHEETS[selectedPod] ? (
                         <>
                         <div className="filter-bar">
                             <div className="filter-group">
