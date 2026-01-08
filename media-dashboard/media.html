@@ -448,6 +448,10 @@
         .channel-icon.seo { background: #059669; }
         .channel-icon.brandcitations { background: #7c3aed; }
         .channel-icon.directory { background: #0891b2; }
+        .channel-icon.redditcommunity { background: #ff4500; }
+        .channel-icon.socials { background: #1da1f2; }
+        .channel-icon.employee { background: #10b981; }
+        .channel-icon.imevents { background: #8b5cf6; }
 
         .channel-name { font-weight: 500; color: var(--text-primary); }
 
@@ -592,7 +596,8 @@
         // Spreadsheet IDs for each pod
         const POD_SPREADSHEETS = {
             conversion: '1Rq85bACiKxewmW9vpsZ7vTZYTnkMBYsGxOzhxj_m_WE',
-            brand: '1qBPiHwq7yAH-le1W2rUMMma97TtDVeV9r_GHsyrEXSs'
+            brand: '1qBPiHwq7yAH-le1W2rUMMma97TtDVeV9r_GHsyrEXSs',
+            awareness: '1u0gIrFqEiPtsmaKF9BedN3r8eV_3JWe-2h364tdIeRk'
         };
         // ============================================
 
@@ -752,8 +757,8 @@
                 const weeks = WEEKS.map((week, idx) => {
                     const colOffset = idx * 3 + 3; // Week 1=3, Week 2=6, Week 3=9, Week 4=12
                     return {
-                        label: week,
-                        dates: WEEK_DATES[week],
+                    label: week,
+                    dates: WEEK_DATES[week],
                         spend: parseValue(rows[1]?.[colOffset]),
                         accounts: parseValue(rows[2]?.[colOffset]),
                         demos: parseValue(rows[3]?.[colOffset]),
@@ -931,6 +936,73 @@
                 return { summary, weeks, channels, month };
             };
 
+            // Process Awareness Pod sheet data (same structure as Brand Advocacy)
+            const processAwarenessData = (rows, month) => {
+                if (!rows || rows.length === 0) return getEmptyData(month);
+
+                // Same structure as Brand Advocacy: MTD totals in column O (index 14)
+                const summaryCol = 14;
+                const summary = {
+                    spend: parseValue(rows[1]?.[summaryCol]),
+                    accounts: parseValue(rows[2]?.[summaryCol]),
+                    demos: parseValue(rows[3]?.[summaryCol]),
+                    deals: parseValue(rows[4]?.[summaryCol]),
+                    dealPoints: parseValue(rows[5]?.[summaryCol]),
+                    generatedMRR: parseValue(rows[10]?.[summaryCol]),
+                    closedMRR: parseValue(rows[11]?.[summaryCol]),
+                    directConversions: parseValue(rows[12]?.[summaryCol]),
+                    directConversionsMRR: parseValue(rows[13]?.[summaryCol]),
+                    directConversionsDealPoints: parseValue(rows[14]?.[summaryCol])
+                };
+
+                // Weekly data at indices 2, 5, 8, 11
+                const weeks = WEEKS.map((week, idx) => {
+                    const colOffset = idx * 3 + 2;
+                    return {
+                        label: week,
+                        dates: WEEK_DATES[week],
+                        spend: parseValue(rows[1]?.[colOffset]),
+                        accounts: parseValue(rows[2]?.[colOffset]),
+                        demos: parseValue(rows[3]?.[colOffset]),
+                        deals: parseValue(rows[4]?.[colOffset]),
+                        dealPoints: parseValue(rows[5]?.[colOffset]),
+                        generatedMRR: parseValue(rows[10]?.[colOffset]),
+                        closedMRR: parseValue(rows[11]?.[colOffset]),
+                        directConversions: parseValue(rows[12]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[13]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[colOffset])
+                    };
+                });
+
+                // Awareness channels: YouTube, Reddit & Communities, Socials, Employee Advocacy, IM & events
+                const channels = [];
+                const awarenessChannels = ['YouTube', 'Reddit & Communities', 'Socials', 'Employee Advocacy', 'IM & Events'];
+                const awarenessIcons = ['youtube', 'redditcommunity', 'socials', 'employee', 'imevents'];
+                const awarenessShorts = ['YT', 'RC', 'S', 'EA', 'IM'];
+                
+                awarenessChannels.forEach((name, idx) => {
+                    const colOffset = idx * 3 + 2;
+                    channels.push({
+                        name,
+                        icon: awarenessIcons[idx],
+                        short: awarenessShorts[idx],
+                        spend: parseValue(rows[18]?.[colOffset]),
+                        accounts: parseValue(rows[19]?.[colOffset]),
+                        demos: parseValue(rows[20]?.[colOffset]),
+                        deals: parseValue(rows[21]?.[colOffset]),
+                        dealPoints: parseValue(rows[22]?.[colOffset]),
+                        generatedMRR: parseValue(rows[27]?.[colOffset]),
+                        closedMRR: parseValue(rows[28]?.[colOffset]),
+                        directConversions: parseValue(rows[29]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[30]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[31]?.[colOffset]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    });
+                });
+
+                return { summary, weeks, channels, month };
+            };
+
             const getEmptyData = (month) => ({
                 summary: { spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 },
                 weeks: WEEKS.map(week => ({ label: week, dates: WEEK_DATES[week], spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 })),
@@ -953,6 +1025,8 @@
                     // Use appropriate parser based on pod
                     if (podKey === 'brand') {
                         return processBrandAdvocacyData(result.values, month);
+                    } else if (podKey === 'awareness') {
+                        return processAwarenessData(result.values, month);
                     }
                     return processSheetData(result.values, month);
                 } catch (err) {
@@ -1482,12 +1556,12 @@
                                         );
                                     };
                                     return (
-                                        <div key={idx} className={`week-card ${selectedWeek === week.label ? 'active' : ''}`} onClick={() => setSelectedWeek(week.label)}>
-                                            <div className="week-card-header">
-                                                <div className="week-label">{week.label}</div>
-                                                <div className="week-dates">{week.dates}</div>
-                                            </div>
-                                            <div className="week-metrics">
+                                    <div key={idx} className={`week-card ${selectedWeek === week.label ? 'active' : ''}`} onClick={() => setSelectedWeek(week.label)}>
+                                        <div className="week-card-header">
+                                            <div className="week-label">{week.label}</div>
+                                            <div className="week-dates">{week.dates}</div>
+                                        </div>
+                                        <div className="week-metrics">
                                                 {renderMetric('Spend', week.spend, prevWeek?.spend, true)}
                                                 {renderMetric('Accounts', week.accounts, prevWeek?.accounts)}
                                                 {renderMetric('Demos', week.demos, prevWeek?.demos)}
@@ -1499,22 +1573,22 @@
                                                 {renderMetric('Dir. MRR', week.directConversionsMRR, prevWeek?.directConversionsMRR, true)}
                                                 {renderMetric('Dir. DP', week.directConversionsDealPoints, prevWeek?.directConversionsDealPoints)}
                                             </div>
-                                        </div>
+                                            </div>
                                     );
                                 })}
-                            </div>
-                        </div>
+                                            </div>
+                                            </div>
                         </>
                         ) : (
                         <div className="empty-state">
                             <div className="empty-state-icon">
                                 {Icons[PODS.find(p => p.key === selectedPod)?.icon || 'grid']}
-                            </div>
+                                        </div>
                             <div className="empty-state-title">{PODS.find(p => p.key === selectedPod)?.label}</div>
                             <div className="empty-state-text">
                                 This pod is not connected yet. Connect a Google Sheet to start tracking data for this pod.
+                                    </div>
                             </div>
-                        </div>
                         )}
                     </main>
 
