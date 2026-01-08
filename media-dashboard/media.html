@@ -2094,38 +2094,69 @@
             };
 
             // Fetch Leadership data from all pods (for Overview - all time)
-            const fetchLeadershipData = async () => {
-                try {
-                    // Fetch All Pods overview
-                    const allPodsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.all}/values/Overview!A1:O35?key=${API_KEY}`;
-                    const allPodsResponse = await fetch(allPodsUrl);
-                    const allPodsResult = allPodsResponse.ok ? await allPodsResponse.json() : { values: [] };
+            // Aggregate Leadership monthly data into Overview
+            const aggregateLeadershipData = (monthsData) => {
+                const allMonths = Object.values(monthsData).filter(m => m.month !== 'Overview');
+                if (allMonths.length === 0) return getEmptyData('Overview');
 
-                    // Fetch January data from each pod to get all-time channel totals
-                    const conversionUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.conversion}/values/January!A1:AZ100?key=${API_KEY}`;
-                    const brandUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.brand}/values/January!A1:AZ100?key=${API_KEY}`;
-                    const awarenessUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.awareness}/values/January!A1:AZ100?key=${API_KEY}`;
+                // Aggregate summary across all months
+                const summary = {
+                    spend: allMonths.reduce((sum, m) => sum + (m.summary?.spend || 0), 0),
+                    accounts: allMonths.reduce((sum, m) => sum + (m.summary?.accounts || 0), 0),
+                    demos: allMonths.reduce((sum, m) => sum + (m.summary?.demos || 0), 0),
+                    deals: allMonths.reduce((sum, m) => sum + (m.summary?.deals || 0), 0),
+                    dealPoints: allMonths.reduce((sum, m) => sum + (m.summary?.dealPoints || 0), 0),
+                    generatedMRR: allMonths.reduce((sum, m) => sum + (m.summary?.generatedMRR || 0), 0),
+                    closedMRR: allMonths.reduce((sum, m) => sum + (m.summary?.closedMRR || 0), 0),
+                    directConversions: allMonths.reduce((sum, m) => sum + (m.summary?.directConversions || 0), 0),
+                    directConversionsMRR: allMonths.reduce((sum, m) => sum + (m.summary?.directConversionsMRR || 0), 0),
+                    directConversionsDealPoints: allMonths.reduce((sum, m) => sum + (m.summary?.directConversionsDealPoints || 0), 0)
+                };
 
-                    const [conversionResp, brandResp, awarenessResp] = await Promise.all([
-                        fetch(conversionUrl),
-                        fetch(brandUrl),
-                        fetch(awarenessUrl)
-                    ]);
+                // Aggregate channels by name and pod
+                const channelMap = {};
+                allMonths.forEach(monthData => {
+                    (monthData.channels || []).forEach(ch => {
+                        const key = ch.name;
+                        if (!channelMap[key]) {
+                            channelMap[key] = { ...ch };
+                        } else {
+                            channelMap[key].spend = (channelMap[key].spend || 0) + (ch.spend || 0);
+                            channelMap[key].accounts = (channelMap[key].accounts || 0) + (ch.accounts || 0);
+                            channelMap[key].demos = (channelMap[key].demos || 0) + (ch.demos || 0);
+                            channelMap[key].deals = (channelMap[key].deals || 0) + (ch.deals || 0);
+                            channelMap[key].dealPoints = (channelMap[key].dealPoints || 0) + (ch.dealPoints || 0);
+                            channelMap[key].generatedMRR = (channelMap[key].generatedMRR || 0) + (ch.generatedMRR || 0);
+                            channelMap[key].closedMRR = (channelMap[key].closedMRR || 0) + (ch.closedMRR || 0);
+                            channelMap[key].directConversions = (channelMap[key].directConversions || 0) + (ch.directConversions || 0);
+                            channelMap[key].directConversionsMRR = (channelMap[key].directConversionsMRR || 0) + (ch.directConversionsMRR || 0);
+                            channelMap[key].directConversionsDealPoints = (channelMap[key].directConversionsDealPoints || 0) + (ch.directConversionsDealPoints || 0);
+                        }
+                    });
+                });
 
-                    const conversionResult = conversionResp.ok ? await conversionResp.json() : { values: [] };
-                    const brandResult = brandResp.ok ? await brandResp.json() : { values: [] };
-                    const awarenessResult = awarenessResp.ok ? await awarenessResp.json() : { values: [] };
+                // Combine weeks from all months (showing each month as a data point)
+                const weeks = allMonths.map((m, idx) => ({
+                    label: MONTHS.find(mo => mo.key === m.month)?.short || m.month,
+                    dates: `${m.month} 2026`,
+                    spend: m.summary?.spend || 0,
+                    accounts: m.summary?.accounts || 0,
+                    demos: m.summary?.demos || 0,
+                    deals: m.summary?.deals || 0,
+                    dealPoints: m.summary?.dealPoints || 0,
+                    generatedMRR: m.summary?.generatedMRR || 0,
+                    closedMRR: m.summary?.closedMRR || 0,
+                    directConversions: m.summary?.directConversions || 0,
+                    directConversionsMRR: m.summary?.directConversionsMRR || 0,
+                    directConversionsDealPoints: m.summary?.directConversionsDealPoints || 0
+                }));
 
-                    return processLeadershipData(
-                        allPodsResult.values || [],
-                        conversionResult.values || [],
-                        brandResult.values || [],
-                        awarenessResult.values || []
-                    );
-                } catch (err) {
-                    console.error('Error fetching leadership data:', err);
-                    return null;
-                }
+                return {
+                    summary,
+                    weeks,
+                    channels: Object.values(channelMap),
+                    month: 'Overview'
+                };
             };
 
             // Aggregate all months data for Overview
@@ -2248,21 +2279,20 @@
                         const available = await checkAvailableMonths(POD_SPREADSHEETS.conversion, 'conversion');
                     setAvailableMonths(available);
 
-                    const allData = {};
-                    for (const month of available) {
+                        const allData = {};
+                        for (const month of available) {
                             const monthData = await fetchLeadershipMonthData(month);
-                        if (monthData) allData[month] = monthData;
-                    }
+                            if (monthData) allData[month] = monthData;
+                        }
 
-                    if (Object.keys(allData).length === 0) {
-                        allData['January'] = getEmptyData('January');
-                    }
+                        if (Object.keys(allData).length === 0) {
+                            allData['January'] = getEmptyData('January');
+                        }
 
-                        // Create Overview aggregation for Leadership
-                        const overviewData = await fetchLeadershipData();
-                        allData['Overview'] = overviewData || aggregateMonthsData(allData);
+                        // Create Overview aggregation for Leadership by summing all monthly data
+                        allData['Overview'] = aggregateLeadershipData(allData);
 
-                    setData(allData);
+                        setData(allData);
                         if (selectedMonth !== 'Overview' && !available.includes(selectedMonth)) {
                             setSelectedMonth('Overview');
                         }
