@@ -237,9 +237,18 @@
 
         .pod-totals-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
             margin-bottom: 32px;
+        }
+
+        @media (max-width: 1200px) {
+            .pod-totals-grid {
+                grid-template-columns: 1fr;
+            }
+            .pod-total-metrics {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         .pod-total-card {
@@ -289,14 +298,17 @@
 
         .pod-total-metrics {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
         }
 
         .pod-metric {
             display: flex;
             flex-direction: column;
             gap: 2px;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
         }
 
         .pod-metric-label {
@@ -2571,11 +2583,16 @@
                             <div className="leadership-section">
                                 <div className="leadership-section-title">Pod Performance Breakdown</div>
                                 <div className="pod-totals-grid">
-                                    {currentData.channels?.filter(ch => ch.name.includes('(Total)')).map((pod, idx) => (
+                                    {currentData.channels?.filter(ch => ch.name.includes('(Total)')).map((pod, idx) => {
+                                        const cpAccount = pod.accounts > 0 ? pod.spend / pod.accounts : 0;
+                                        const cpDemo = pod.demos > 0 ? pod.spend / pod.demos : 0;
+                                        const cpDeal = pod.deals > 0 ? pod.spend / pod.deals : 0;
+                                        const cpDealPt = pod.dealPoints > 0 ? pod.spend / pod.dealPoints : 0;
+                                        return (
                                         <div key={idx} className={`pod-total-card ${pod.icon}`}>
                                             <div className="pod-total-header">
                                                 <div className={`pod-total-icon ${pod.icon}`}>
-                                                    {Icons[pod.icon === 'awareness' ? 'eye' : pod.icon === 'brand' ? 'heart' : pod.icon === 'conversion' ? 'zap' : 'help']}
+                                                    {Icons[pod.icon === 'awareness' ? 'eye' : pod.icon === 'brand' ? 'heart' : pod.icon === 'conversion' ? 'zap' : pod.icon === 'misc' ? 'help' : 'grid']}
                                                 </div>
                                                 <div className="pod-total-name">{pod.name.replace(' (Total)', '')}</div>
                                             </div>
@@ -2585,12 +2602,36 @@
                                                     <div className="pod-metric-value">{formatCurrency(pod.spend)}</div>
                                                 </div>
                                                 <div className="pod-metric">
+                                                    <div className="pod-metric-label">Accounts</div>
+                                                    <div className="pod-metric-value">{formatNumber(pod.accounts)}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Demos</div>
+                                                    <div className="pod-metric-value">{formatNumber(pod.demos)}</div>
+                                                </div>
+                                                <div className="pod-metric">
                                                     <div className="pod-metric-label">Deals</div>
                                                     <div className="pod-metric-value">{formatNumber(pod.deals)}</div>
                                                 </div>
                                                 <div className="pod-metric">
                                                     <div className="pod-metric-label">Deal Points</div>
                                                     <div className="pod-metric-value">{formatNumber(pod.dealPoints)}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">CP Account</div>
+                                                    <div className="pod-metric-value">{cpAccount > 0 ? formatCurrency(cpAccount) : '—'}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">CP Demo</div>
+                                                    <div className="pod-metric-value">{cpDemo > 0 ? formatCurrency(cpDemo) : '—'}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">CP Deal</div>
+                                                    <div className="pod-metric-value">{cpDeal > 0 ? formatCurrency(cpDeal) : '—'}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">CP Deal Pt</div>
+                                                    <div className="pod-metric-value">{cpDealPt > 0 ? formatCurrency(cpDealPt) : '—'}</div>
                                                 </div>
                                                 <div className="pod-metric">
                                                     <div className="pod-metric-label">Gen. MRR</div>
@@ -2604,9 +2645,17 @@
                                                     <div className="pod-metric-label">Dir. Conv.</div>
                                                     <div className="pod-metric-value">{formatNumber(pod.directConversions)}</div>
                                                 </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Dir. Conv. MRR</div>
+                                                    <div className="pod-metric-value">{formatCurrency(pod.directConversionsMRR)}</div>
+                                                </div>
+                                                <div className="pod-metric">
+                                                    <div className="pod-metric-label">Dir. Conv. DP</div>
+                                                    <div className="pod-metric-value">{formatNumber(pod.directConversionsDealPoints)}</div>
+                                                </div>
                                             </div>
                                         </div>
-                                    ))}
+                                    )})}
                                 </div>
                             </div>
 
