@@ -1954,11 +1954,9 @@
                     let range;
                     if (podKey === 'all') {
                         range = 'Overview!A1:O35';
-                    } else if (podKey === 'outbound') {
-                        // Outbound uses "January 2026" format for tabs
-                        range = `${month} 2026!A1:AZ100`;
                     } else {
-                        range = `${month}!A1:AZ100`;
+                        // All pods use simple month names for tabs
+                        range = `${month}!A1:AZ150`;
                     }
                     
                     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?key=${API_KEY}`;
@@ -1991,8 +1989,8 @@
                 const available = [];
                 for (const month of MONTHS) {
                     try {
-                        // Outbound uses "January 2026" format, others use "January"
-                        const tabName = podKey === 'outbound' ? `${month.key} 2026` : month.key;
+                        // All pods use simple month names like "January"
+                        const tabName = month.key;
                         const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName)}!A1:A1?key=${API_KEY}`;
                         const response = await fetch(url);
                         if (response.ok) available.push(month.key);
@@ -2100,20 +2098,42 @@
                         if (!sdrMap[sdr.name]) {
                             sdrMap[sdr.name] = { ...sdr };
                         } else {
-                            sdrMap[sdr.name].demos += sdr.demos || 0;
-                            sdrMap[sdr.name].deals += sdr.deals || 0;
-                            sdrMap[sdr.name].dealPoints += sdr.dealPoints || 0;
-                            sdrMap[sdr.name].accounts += sdr.accounts || 0;
-                            sdrMap[sdr.name].generatedMRR += sdr.generatedMRR || 0;
-                            sdrMap[sdr.name].closedMRR += sdr.closedMRR || 0;
-                            sdrMap[sdr.name].directConversions += sdr.directConversions || 0;
-                            sdrMap[sdr.name].directConversionsMRR += sdr.directConversionsMRR || 0;
-                            sdrMap[sdr.name].directConversionsDealPoints += sdr.directConversionsDealPoints || 0;
+                            // Outbound SDR fields
+                            sdrMap[sdr.name].salesloftCalls = (sdrMap[sdr.name].salesloftCalls || 0) + (sdr.salesloftCalls || 0);
+                            sdrMap[sdr.name].salesloftConnected = (sdrMap[sdr.name].salesloftConnected || 0) + (sdr.salesloftConnected || 0);
+                            sdrMap[sdr.name].aiCalls = (sdrMap[sdr.name].aiCalls || 0) + (sdr.aiCalls || 0);
+                            sdrMap[sdr.name].aiCallsConnected = (sdrMap[sdr.name].aiCallsConnected || 0) + (sdr.aiCallsConnected || 0);
+                            sdrMap[sdr.name].totalDemos = (sdrMap[sdr.name].totalDemos || 0) + (sdr.totalDemos || 0);
+                            sdrMap[sdr.name].totalDeals = (sdrMap[sdr.name].totalDeals || 0) + (sdr.totalDeals || 0);
+                            sdrMap[sdr.name].mrrPipeline = (sdrMap[sdr.name].mrrPipeline || 0) + (sdr.mrrPipeline || 0);
+                            sdrMap[sdr.name].closedMRR = (sdrMap[sdr.name].closedMRR || 0) + (sdr.closedMRR || 0);
+                            // Generic pod fields (fallback)
+                            sdrMap[sdr.name].demos = (sdrMap[sdr.name].demos || 0) + (sdr.demos || 0);
+                            sdrMap[sdr.name].deals = (sdrMap[sdr.name].deals || 0) + (sdr.deals || 0);
+                            sdrMap[sdr.name].dealPoints = (sdrMap[sdr.name].dealPoints || 0) + (sdr.dealPoints || 0);
+                            sdrMap[sdr.name].accounts = (sdrMap[sdr.name].accounts || 0) + (sdr.accounts || 0);
+                            sdrMap[sdr.name].generatedMRR = (sdrMap[sdr.name].generatedMRR || 0) + (sdr.generatedMRR || 0);
                         }
                     });
                 });
 
-                return { summary, weeks, channels: Object.values(channelMap), sdrs: Object.values(sdrMap), month: 'Overview' };
+                // Aggregate teamTotals for Outbound pod
+                const teamTotals = {
+                    salesloftCalls: allMonths.reduce((sum, m) => sum + (m.teamTotals?.salesloftCalls || 0), 0),
+                    salesloftConnected: allMonths.reduce((sum, m) => sum + (m.teamTotals?.salesloftConnected || 0), 0),
+                    salesloftConnectPercent: '0%',
+                    aiCalls: allMonths.reduce((sum, m) => sum + (m.teamTotals?.aiCalls || 0), 0),
+                    aiCallsConnected: allMonths.reduce((sum, m) => sum + (m.teamTotals?.aiCallsConnected || 0), 0),
+                    aiCallsConnectPercent: '0%',
+                    totalDemos: allMonths.reduce((sum, m) => sum + (m.teamTotals?.totalDemos || 0), 0),
+                    totalDeals: allMonths.reduce((sum, m) => sum + (m.teamTotals?.totalDeals || 0), 0),
+                    dealsColdData: allMonths.reduce((sum, m) => sum + (m.teamTotals?.dealsColdData || 0), 0),
+                    dealsMQLs: allMonths.reduce((sum, m) => sum + (m.teamTotals?.dealsMQLs || 0), 0),
+                    mrrPipeline: allMonths.reduce((sum, m) => sum + (m.teamTotals?.mrrPipeline || 0), 0),
+                    closedMRR: allMonths.reduce((sum, m) => sum + (m.teamTotals?.closedMRR || 0), 0)
+                };
+
+                return { summary, weeks, channels: Object.values(channelMap), sdrs: Object.values(sdrMap), teamTotals, month: 'Overview', isOutbound: allMonths.some(m => m.isOutbound) };
             };
 
             const fetchAllData = async (podKey = selectedPod) => {
