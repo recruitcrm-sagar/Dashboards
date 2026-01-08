@@ -420,7 +420,7 @@
         /* Weekly Cards */
         .weekly-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px; margin-top: 24px;
         }
 
@@ -440,17 +440,17 @@
         .week-label { font-size: 14px; font-weight: 600; }
         .week-dates { font-size: 11px; color: var(--text-muted); }
 
-        .week-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .week-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 
-        .week-metric { padding: 12px; background: var(--bg-secondary); border-radius: var(--radius-md); }
+        .week-metric { padding: 8px 10px; background: var(--bg-secondary); border-radius: var(--radius-sm); }
 
         .week-metric-label {
-            font-size: 10px; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+            font-size: 9px; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;
         }
 
         .week-metric-value {
-            font-size: 16px; font-weight: 600;
+            font-size: 13px; font-weight: 600;
             font-family: 'Inter', sans-serif;
         }
 
@@ -649,18 +649,24 @@
                     directConversionsDealPoints: parseValue(rows[14]?.[1])
                 };
 
-                // Weekly data - not yet populated in your sheet
-                const weeks = WEEKS.map((week, idx) => ({
-                    label: week,
-                    dates: WEEK_DATES[week],
-                    spend: 0,
-                    accounts: 0,
-                    demos: 0,
-                    deals: 0,
-                    dealPoints: 0,
-                    generatedMRR: 0,
-                    closedMRR: 0
-                }));
+                // Weekly data from columns D, G, J, M (indices 3, 6, 9, 12)
+                const weeks = WEEKS.map((week, idx) => {
+                    const colOffset = idx * 3 + 3; // Week 1=3, Week 2=6, Week 3=9, Week 4=12
+                    return {
+                        label: week,
+                        dates: WEEK_DATES[week],
+                        spend: parseValue(rows[1]?.[colOffset]),
+                        accounts: parseValue(rows[2]?.[colOffset]),
+                        demos: parseValue(rows[3]?.[colOffset]),
+                        deals: parseValue(rows[4]?.[colOffset]),
+                        dealPoints: parseValue(rows[5]?.[colOffset]),
+                        generatedMRR: parseValue(rows[10]?.[colOffset]),
+                        closedMRR: parseValue(rows[11]?.[colOffset]),
+                        directConversions: parseValue(rows[12]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[13]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[colOffset])
+                    };
+                });
 
                 // Channel data
                 // First group starts at row 18 (index 17), values in column D (index 3)
@@ -761,7 +767,7 @@
 
             const getEmptyData = (month) => ({
                 summary: { spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 },
-                weeks: WEEKS.map(week => ({ label: week, dates: WEEK_DATES[week], spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0 })),
+                weeks: WEEKS.map(week => ({ label: week, dates: WEEK_DATES[week], spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 })),
                 channels: [],
                 month
             });
@@ -1170,6 +1176,10 @@
                                                 <div className="week-metric-value">{formatCurrency(week.spend)}</div>
                                             </div>
                                             <div className="week-metric">
+                                                <div className="week-metric-label">Accounts</div>
+                                                <div className="week-metric-value">{formatNumber(week.accounts)}</div>
+                                            </div>
+                                            <div className="week-metric">
                                                 <div className="week-metric-label">Demos</div>
                                                 <div className="week-metric-value">{formatNumber(week.demos)}</div>
                                             </div>
@@ -1178,8 +1188,28 @@
                                                 <div className="week-metric-value">{formatNumber(week.deals)}</div>
                                             </div>
                                             <div className="week-metric">
-                                                <div className="week-metric-label">MRR</div>
+                                                <div className="week-metric-label">Deal Pts</div>
+                                                <div className="week-metric-value">{formatNumber(week.dealPoints)}</div>
+                                            </div>
+                                            <div className="week-metric">
+                                                <div className="week-metric-label">Gen. MRR</div>
                                                 <div className="week-metric-value">{formatCurrency(week.generatedMRR)}</div>
+                                            </div>
+                                            <div className="week-metric">
+                                                <div className="week-metric-label">Closed MRR</div>
+                                                <div className="week-metric-value">{formatCurrency(week.closedMRR)}</div>
+                                            </div>
+                                            <div className="week-metric">
+                                                <div className="week-metric-label">Dir. Conv</div>
+                                                <div className="week-metric-value">{formatNumber(week.directConversions)}</div>
+                                            </div>
+                                            <div className="week-metric">
+                                                <div className="week-metric-label">Dir. MRR</div>
+                                                <div className="week-metric-value">{formatCurrency(week.directConversionsMRR)}</div>
+                                            </div>
+                                            <div className="week-metric">
+                                                <div className="week-metric-label">Dir. DP</div>
+                                                <div className="week-metric-value">{formatNumber(week.directConversionsDealPoints)}</div>
                                             </div>
                                         </div>
                                     </div>
