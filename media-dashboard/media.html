@@ -131,6 +131,7 @@
         .pod-icon.brand { background: #fce7f3; color: #db2777; }
         .pod-icon.conversion { background: #d1fae5; color: #059669; }
         .pod-icon.untracked { background: #e2e8f0; color: #64748b; }
+        .pod-icon.leadership { background: #fef3c7; color: #b45309; }
 
         .empty-state {
             display: flex; flex-direction: column;
@@ -701,7 +702,8 @@
             eye: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
             heart: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
             zap: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-            help: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            help: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+            crown: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
         };
 
         const PODS = [
@@ -709,7 +711,8 @@
             { key: 'awareness', label: 'Awareness Pod', icon: 'eye', iconClass: 'awareness' },
             { key: 'brand', label: 'Brand Advocacy Pod', icon: 'heart', iconClass: 'brand' },
             { key: 'conversion', label: 'Conversion Pod', icon: 'zap', iconClass: 'conversion' },
-            { key: 'untracked', label: 'Untracked Pods', icon: 'help', iconClass: 'untracked' }
+            { key: 'untracked', label: 'Untracked Pods', icon: 'help', iconClass: 'untracked' },
+            { key: 'leadership', label: 'Leadership', icon: 'crown', iconClass: 'leadership' }
         ];
 
         function Dashboard() {
@@ -1185,19 +1188,19 @@
                         setData({ 'All Time': overviewData || getEmptyData('All Time') });
                     } else {
                         const available = await checkAvailableMonths(spreadsheetId);
-                        setAvailableMonths(available);
+                    setAvailableMonths(available);
 
-                        const allData = {};
-                        for (const month of available) {
+                    const allData = {};
+                    for (const month of available) {
                             const monthData = await fetchMonthData(month, spreadsheetId, podKey);
-                            if (monthData) allData[month] = monthData;
-                        }
+                        if (monthData) allData[month] = monthData;
+                    }
 
-                        if (Object.keys(allData).length === 0) {
-                            allData['January'] = getEmptyData('January');
-                        }
+                    if (Object.keys(allData).length === 0) {
+                        allData['January'] = getEmptyData('January');
+                    }
 
-                        setData(allData);
+                    setData(allData);
                         if (!available.includes(selectedMonth)) {
                             setSelectedMonth(available[0] || 'January');
                         }
