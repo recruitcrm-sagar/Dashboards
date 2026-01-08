@@ -87,23 +87,79 @@
             padding: 0 12px; margin-bottom: 8px;
         }
 
-        .month-list { display: flex; flex-direction: column; gap: 2px; }
-
-        .month-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 12px; border-radius: var(--radius-md);
-            cursor: pointer; transition: all 0.15s;
-            font-size: 14px; color: var(--text-secondary);
-            border: none; background: transparent;
-            width: 100%; text-align: left; font-family: inherit;
+        /* Period Tabs - Overview + Months */
+        .period-tabs {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin-bottom: 20px;
         }
 
-        .month-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
-        .month-item.active { background: #eff6ff; color: var(--accent-primary); font-weight: 500; }
-        .month-item.disabled { color: var(--text-muted); cursor: not-allowed; opacity: 0.5; }
+        .period-tab {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            white-space: nowrap;
+        }
 
-        .month-status { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-success); }
-        .month-status.empty { background: var(--border-color); }
+        .period-tab:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .period-tab.active {
+            background: var(--bg-primary);
+            color: var(--accent-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .period-tab.overview {
+            font-weight: 600;
+        }
+
+        .period-tab.overview.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .period-tab-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .period-tab .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-success);
+        }
+
+        .period-tab.disabled {
+            color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .period-tab.disabled .status-dot {
+            background: var(--border-color);
+        }
 
         .pod-list { display: flex; flex-direction: column; gap: 2px; }
 
@@ -833,7 +889,8 @@
             zap: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
             help: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
             crown: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>,
-            send: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            send: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+            globe: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
         };
 
         const PODS = [
@@ -1599,6 +1656,66 @@
                 }
             };
 
+            // Aggregate all months data for Overview
+            const aggregateMonthsData = (monthsData) => {
+                const allMonths = Object.values(monthsData);
+                if (allMonths.length === 0) return getEmptyData('Overview');
+
+                const summary = {
+                    spend: allMonths.reduce((sum, m) => sum + (m.summary?.spend || 0), 0),
+                    accounts: allMonths.reduce((sum, m) => sum + (m.summary?.accounts || 0), 0),
+                    demos: allMonths.reduce((sum, m) => sum + (m.summary?.demos || 0), 0),
+                    deals: allMonths.reduce((sum, m) => sum + (m.summary?.deals || 0), 0),
+                    dealPoints: allMonths.reduce((sum, m) => sum + (m.summary?.dealPoints || 0), 0),
+                    generatedMRR: allMonths.reduce((sum, m) => sum + (m.summary?.generatedMRR || 0), 0),
+                    closedMRR: allMonths.reduce((sum, m) => sum + (m.summary?.closedMRR || 0), 0),
+                    directConversions: allMonths.reduce((sum, m) => sum + (m.summary?.directConversions || 0), 0),
+                    directConversionsMRR: allMonths.reduce((sum, m) => sum + (m.summary?.directConversionsMRR || 0), 0),
+                    directConversionsDealPoints: allMonths.reduce((sum, m) => sum + (m.summary?.directConversionsDealPoints || 0), 0)
+                };
+
+                // Create monthly trend for the weeks section (showing each month as a data point)
+                const weeks = allMonths.map((m, idx) => ({
+                    label: MONTHS[idx]?.short || `M${idx + 1}`,
+                    dates: `${MONTHS[idx]?.label || 'Month'} 2026`,
+                    spend: m.summary?.spend || 0,
+                    accounts: m.summary?.accounts || 0,
+                    demos: m.summary?.demos || 0,
+                    deals: m.summary?.deals || 0,
+                    dealPoints: m.summary?.dealPoints || 0,
+                    generatedMRR: m.summary?.generatedMRR || 0,
+                    closedMRR: m.summary?.closedMRR || 0,
+                    directConversions: m.summary?.directConversions || 0,
+                    directConversionsMRR: m.summary?.directConversionsMRR || 0,
+                    directConversionsDealPoints: m.summary?.directConversionsDealPoints || 0
+                }));
+
+                // Aggregate channels
+                const channelMap = {};
+                allMonths.forEach(m => {
+                    (m.channels || []).forEach(ch => {
+                        if (!channelMap[ch.name]) {
+                            channelMap[ch.name] = { ...ch };
+                        } else {
+                            channelMap[ch.name].spend += ch.spend || 0;
+                            channelMap[ch.name].accounts += ch.accounts || 0;
+                            channelMap[ch.name].demos += ch.demos || 0;
+                            channelMap[ch.name].deals += ch.deals || 0;
+                            channelMap[ch.name].dealPoints += ch.dealPoints || 0;
+                            channelMap[ch.name].generatedMRR += ch.generatedMRR || 0;
+                            channelMap[ch.name].closedMRR += ch.closedMRR || 0;
+                            channelMap[ch.name].directConversions += ch.directConversions || 0;
+                            channelMap[ch.name].directConversionsMRR += ch.directConversionsMRR || 0;
+                            channelMap[ch.name].directConversionsDealPoints += ch.directConversionsDealPoints || 0;
+                            channelMap[ch.name].clicks += ch.clicks || 0;
+                            channelMap[ch.name].impressions += ch.impressions || 0;
+                        }
+                    });
+                });
+
+                return { summary, weeks, channels: Object.values(channelMap), month: 'Overview' };
+            };
+
             const fetchAllData = async (podKey = selectedPod) => {
                 const spreadsheetId = POD_SPREADSHEETS[podKey];
                 if (!spreadsheetId) {
@@ -1626,21 +1743,25 @@
                         setData({ 'All Time': overviewData || getEmptyData('All Time') });
                     } else {
                         const available = await checkAvailableMonths(spreadsheetId);
-                    setAvailableMonths(available);
+                        setAvailableMonths(available);
 
-                    const allData = {};
-                    for (const month of available) {
+                        const allData = {};
+                        for (const month of available) {
                             const monthData = await fetchMonthData(month, spreadsheetId, podKey);
-                        if (monthData) allData[month] = monthData;
-                    }
+                            if (monthData) allData[month] = monthData;
+                        }
 
-                    if (Object.keys(allData).length === 0) {
-                        allData['January'] = getEmptyData('January');
-                    }
+                        if (Object.keys(allData).length === 0) {
+                            allData['January'] = getEmptyData('January');
+                        }
 
-                    setData(allData);
-                        if (!available.includes(selectedMonth)) {
-                            setSelectedMonth(available[0] || 'January');
+                        // Create Overview aggregation
+                        allData['Overview'] = aggregateMonthsData(allData);
+
+                        setData(allData);
+                        // Default to Overview when switching pods
+                        if (selectedMonth !== 'Overview' && !available.includes(selectedMonth)) {
+                            setSelectedMonth('Overview');
                         }
                     }
                     
@@ -1663,6 +1784,10 @@
             useEffect(() => {
                 if (POD_SPREADSHEETS[selectedPod]) {
                     setLoading(true);
+                    // Default to Overview for pods with monthly data
+                    if (selectedPod !== 'leadership' && selectedPod !== 'all') {
+                        setSelectedMonth('Overview');
+                    }
                     fetchAllData(selectedPod);
                 }
             }, [selectedPod]);
@@ -1873,25 +1998,6 @@
                                 </div>
                             </div>
 
-                            <div className="sidebar-section">
-                                <div className="sidebar-section-title">2026</div>
-                                <div className="month-list">
-                                    {MONTHS.map(month => {
-                                        const hasData = availableMonths.includes(month.key);
-                                        return (
-                                            <button
-                                                key={month.key}
-                                                className={`month-item ${selectedMonth === month.key ? 'active' : ''} ${!hasData ? 'disabled' : ''}`}
-                                                onClick={() => hasData && setSelectedMonth(month.key)}
-                                                disabled={!hasData}
-                                            >
-                                                <span>{month.label}</span>
-                                                <span className={`month-status ${hasData ? '' : 'empty'}`}></span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
                         </div>
 
                         <div className="sidebar-footer">
@@ -1918,13 +2024,40 @@
 
                     <main className="main-content">
                         <div className="topbar">
-                            <div className="page-title">{PODS.find(p => p.key === selectedPod)?.label} — {selectedPod === 'leadership' || selectedPod === 'all' ? 'All Time' : `${selectedMonth} 2026`}</div>
+                            <div className="page-title">{PODS.find(p => p.key === selectedPod)?.label}</div>
                             <div className="topbar-right">
                                 <button className={`btn-icon ${refreshing ? 'spinning' : ''}`} onClick={() => fetchAllData(selectedPod)} disabled={refreshing} title="Refresh data">
                                     {Icons.refresh}
                                 </button>
                             </div>
                         </div>
+
+                        {/* Period Tabs - Only show for pods with monthly data */}
+                        {POD_SPREADSHEETS[selectedPod] && selectedPod !== 'leadership' && selectedPod !== 'all' && (
+                            <div className="period-tabs">
+                                <button
+                                    className={`period-tab overview ${selectedMonth === 'Overview' ? 'active' : ''}`}
+                                    onClick={() => setSelectedMonth('Overview')}
+                                >
+                                    <span className="period-tab-icon">{Icons.globe}</span>
+                                    Overview
+                                </button>
+                                {MONTHS.map(month => {
+                                    const hasData = availableMonths.includes(month.key);
+                                    return (
+                                        <button
+                                            key={month.key}
+                                            className={`period-tab ${selectedMonth === month.key ? 'active' : ''} ${!hasData ? 'disabled' : ''}`}
+                                            onClick={() => hasData && setSelectedMonth(month.key)}
+                                            disabled={!hasData}
+                                        >
+                                            {month.short}
+                                            {hasData && <span className="status-dot"></span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
 
                         {selectedPod === 'leadership' && currentData.channels ? (
                         <>
@@ -2202,11 +2335,9 @@
                         <>
                         <div className="filter-bar">
                             <div className="filter-group">
-                                <span className="filter-label">Period</span>
-                                <select className="filter-select" value={selectedWeek} onChange={(e) => setSelectedWeek(e.target.value)}>
-                                    <option value="MTD">Month to Date</option>
-                                    {WEEKS.map(week => <option key={week} value={week}>{week}</option>)}
-                                </select>
+                                <span className="filter-label" style={{fontWeight: 600, color: 'var(--text-primary)'}}>
+                                    {selectedMonth === 'Overview' ? 'All-Time Overview' : `${selectedMonth} 2026`}
+                                </span>
                             </div>
                             <div style={{flex: 1}}></div>
                             {lastUpdated && <span className="filter-label">Updated: {lastUpdated.toLocaleTimeString()}</span>}
