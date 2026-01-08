@@ -1439,61 +1439,37 @@
                     });
                 });
 
-                // Parse SDR data from the sheet
-                // SDR names are typically in column A, starting from a specific row
-                // We'll look for rows that contain SDR data
-                const sdrs = [];
+                // SDR names for the Outbound team
+                const SDR_NAMES = ['Vanshita', 'Akanksha', 'AI SDR', 'Samriddhi', 'Rashi'];
+                const SDR_COLORS = ['#667eea', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6'];
                 
-                // Look for SDR data starting from row 40+ (after channel data)
-                // Each SDR has their name in column A and metrics in subsequent columns
-                for (let i = 40; i < Math.min(rows.length, 80); i++) {
-                    const name = rows[i]?.[0];
-                    // Skip empty rows or header rows
-                    if (name && name.trim() !== '' && !name.includes('SDR') && !name.includes('Total') && !name.includes('DATA')) {
-                        const sdr = {
-                            name: name.trim(),
-                            demos: parseValue(rows[i]?.[1]),
-                            deals: parseValue(rows[i]?.[2]),
-                            dealPoints: parseValue(rows[i]?.[3]),
-                            accounts: parseValue(rows[i]?.[4]),
-                            generatedMRR: parseValue(rows[i]?.[5]),
-                            closedMRR: parseValue(rows[i]?.[6]),
-                            directConversions: parseValue(rows[i]?.[7]),
-                            target: parseValue(rows[i]?.[8]),
-                            incentive: rows[i]?.[9] || ''
-                        };
-                        // Only add if SDR has some data
-                        if (sdr.demos > 0 || sdr.deals > 0 || sdr.accounts > 0 || sdr.name.length > 2) {
-                            sdrs.push(sdr);
-                        }
-                    }
-                }
-
-                // Also check for SDR names in a different location (column-based layout)
-                // Some sheets have SDRs across columns starting from column C
-                if (sdrs.length === 0) {
-                    // Try reading SDR names from row 1 or 2 across columns
-                    const headerRow = rows[0] || [];
-                    const dataRow = rows[1] || [];
+                // Parse SDR data from the sheet
+                const sdrs = SDR_NAMES.map((name, idx) => {
+                    // Look for SDR column - SDRs might be in columns starting from column 2
+                    const colOffset = idx + 2; // Starting from column C (index 2)
                     
-                    for (let col = 2; col < Math.min(headerRow.length, 20); col++) {
-                        const name = headerRow[col];
-                        if (name && name.trim() !== '' && !name.includes('Week') && !name.includes('MTD') && !name.includes('Total')) {
-                            sdrs.push({
-                                name: name.trim(),
-                                demos: parseValue(rows[3]?.[col]),
-                                deals: parseValue(rows[4]?.[col]),
-                                dealPoints: parseValue(rows[5]?.[col]),
-                                accounts: parseValue(rows[2]?.[col]),
-                                generatedMRR: parseValue(rows[10]?.[col]),
-                                closedMRR: parseValue(rows[11]?.[col]),
-                                directConversions: parseValue(rows[12]?.[col]),
-                                target: 0,
-                                incentive: ''
-                            });
-                        }
-                    }
-                }
+                    return {
+                        name,
+                        color: SDR_COLORS[idx],
+                        // Summary metrics
+                        demos: parseValue(rows[3]?.[colOffset]),
+                        deals: parseValue(rows[4]?.[colOffset]),
+                        dealPoints: parseValue(rows[5]?.[colOffset]),
+                        accounts: parseValue(rows[2]?.[colOffset]),
+                        generatedMRR: parseValue(rows[10]?.[colOffset]),
+                        closedMRR: parseValue(rows[11]?.[colOffset]),
+                        directConversions: parseValue(rows[12]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[13]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[colOffset]),
+                        // Data source breakdown for this SDR
+                        dataBreakdown: outboundChannels.map((source, srcIdx) => ({
+                            source,
+                            demos: parseValue(rows[20 + srcIdx]?.[colOffset]),
+                            deals: parseValue(rows[32 + srcIdx]?.[colOffset]),
+                            accounts: parseValue(rows[44 + srcIdx]?.[colOffset])
+                        }))
+                    };
+                });
 
                 return { summary, weeks, channels, sdrs, month };
             };
@@ -2867,11 +2843,13 @@
                             {/* SDR Section - Only for Outbound Pod */}
                             {selectedPod === 'outbound' && currentData.sdrs && currentData.sdrs.length > 0 && (
                                 <div className="sdr-section">
-                                    <div className="sdr-section-title">SDR Performance</div>
-                                    <div className="table-card">
+                                    <div className="sdr-section-title">SDR Performance Overview</div>
+                                    
+                                    {/* SDR Summary Table */}
+                                    <div className="table-card" style={{marginBottom: '24px'}}>
                                         <div className="table-header">
-                                            <div className="table-title">Sales Development Representatives</div>
-                                            </div>
+                                            <div className="table-title">Team Performance Summary</div>
+                                        </div>
                                         <div style={{overflowX: 'auto'}}>
                                         <table className="sdr-table">
                                             <thead>
@@ -2884,6 +2862,7 @@
                                                     <th>Gen. MRR</th>
                                                     <th>Closed MRR</th>
                                                     <th>Dir. Conv.</th>
+                                                    <th>Dir. MRR</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -2891,11 +2870,11 @@
                                                     <tr key={idx}>
                                                         <td>
                                                             <div className="sdr-name-cell">
-                                                                <div className="sdr-mini-avatar">
+                                                                <div className="sdr-mini-avatar" style={{background: sdr.color || '#667eea'}}>
                                                                     {sdr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                        </div>
+                                                                </div>
                                                                 <span style={{fontWeight: 500}}>{sdr.name}</span>
-                                    </div>
+                                                            </div>
                                                         </td>
                                                         <td>{formatNumber(sdr.demos)}</td>
                                                         <td>{formatNumber(sdr.deals)}</td>
@@ -2904,12 +2883,57 @@
                                                         <td>{formatCurrency(sdr.generatedMRR)}</td>
                                                         <td>{formatCurrency(sdr.closedMRR)}</td>
                                                         <td>{formatNumber(sdr.directConversions)}</td>
+                                                        <td>{formatCurrency(sdr.directConversionsMRR)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
-                            </div>
-                        </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Individual SDR Detail Cards */}
+                                    <div className="sdr-section-title">Individual SDR Details</div>
+                                    <div className="sdr-grid">
+                                        {currentData.sdrs.map((sdr, idx) => (
+                                            <div key={idx} className="sdr-card">
+                                                <div className="sdr-header">
+                                                    <div className="sdr-avatar" style={{background: sdr.color || '#667eea'}}>
+                                                        {sdr.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                                    </div>
+                                                    <div className="sdr-info">
+                                                        <div className="sdr-name">{sdr.name}</div>
+                                                        <div className="sdr-role">Sales Development Rep</div>
+                                                    </div>
+                                                </div>
+                                                <div className="sdr-metrics">
+                                                    <div className="sdr-metric">
+                                                        <div className="sdr-metric-value">{formatNumber(sdr.demos)}</div>
+                                                        <div className="sdr-metric-label">Demos</div>
+                                                    </div>
+                                                    <div className="sdr-metric">
+                                                        <div className="sdr-metric-value">{formatNumber(sdr.deals)}</div>
+                                                        <div className="sdr-metric-label">Deals</div>
+                                                    </div>
+                                                    <div className="sdr-metric">
+                                                        <div className="sdr-metric-value">{formatNumber(sdr.dealPoints)}</div>
+                                                        <div className="sdr-metric-label">Deal Pts</div>
+                                                    </div>
+                                                    <div className="sdr-metric">
+                                                        <div className="sdr-metric-value">{formatNumber(sdr.accounts)}</div>
+                                                        <div className="sdr-metric-label">Accounts</div>
+                                                    </div>
+                                                    <div className="sdr-metric">
+                                                        <div className="sdr-metric-value">{formatCurrency(sdr.generatedMRR)}</div>
+                                                        <div className="sdr-metric-label">Gen. MRR</div>
+                                                    </div>
+                                                    <div className="sdr-metric">
+                                                        <div className="sdr-metric-value">{formatNumber(sdr.directConversions)}</div>
+                                                        <div className="sdr-metric-label">Dir. Conv</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                                             </div>
