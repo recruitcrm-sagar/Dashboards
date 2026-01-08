@@ -256,7 +256,7 @@
         /* Summary Cards */
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 16px; margin-bottom: 24px;
         }
 
@@ -281,8 +281,13 @@
         .summary-icon.accounts { background: #dbeafe; color: #2563eb; }
         .summary-icon.demos { background: #d1fae5; color: #059669; }
         .summary-icon.deals { background: #f3e8ff; color: #7c3aed; }
+        .summary-icon.dealpoints { background: #fce7f3; color: #db2777; }
         .summary-icon.mrr { background: #ecfdf5; color: #047857; }
+        .summary-icon.closedmrr { background: #d1fae5; color: #059669; }
         .summary-icon.cpa { background: #e0f2fe; color: #0284c7; }
+        .summary-icon.directconv { background: #fff7ed; color: #ea580c; }
+        .summary-icon.directmrr { background: #fef9c3; color: #ca8a04; }
+        .summary-icon.directdp { background: #f0fdf4; color: #16a34a; }
 
         .summary-label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
 
@@ -484,6 +489,10 @@
         @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         /* Responsive */
+        @media (max-width: 1600px) {
+            .summary-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
         @media (max-width: 1400px) {
             .summary-grid { grid-template-columns: repeat(3, 1fr); }
             .charts-grid { grid-template-columns: 1fr; }
@@ -493,6 +502,7 @@
             .sidebar { display: none; }
             .main-content { margin-left: 0; }
             .weekly-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 768px) {
@@ -577,6 +587,10 @@
             trending: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>,
             percent: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
             check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            star: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+            award: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
+            arrowUp: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>,
+            mouse: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="3" width="12" height="18" rx="6"/><line x1="12" y1="7" x2="12" y2="11"/></svg>,
             grid: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
             eye: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
             heart: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
@@ -629,7 +643,10 @@
                     deals: parseValue(rows[4]?.[1]),
                     dealPoints: parseValue(rows[5]?.[1]),
                     generatedMRR: parseValue(rows[10]?.[1]),
-                    closedMRR: parseValue(rows[11]?.[1])
+                    closedMRR: parseValue(rows[11]?.[1]),
+                    directConversions: parseValue(rows[12]?.[1]),
+                    directConversionsMRR: parseValue(rows[13]?.[1]),
+                    directConversionsDealPoints: parseValue(rows[14]?.[1])
                 };
 
                 // Weekly data - not yet populated in your sheet
@@ -667,7 +684,14 @@
                         deals: parseValue(rows[21]?.[colOffset]),
                         dealPoints: parseValue(rows[22]?.[colOffset]),
                         generatedMRR: parseValue(rows[27]?.[colOffset]),
-                        closedMRR: parseValue(rows[28]?.[colOffset])
+                        closedMRR: parseValue(rows[28]?.[colOffset]),
+                        directConversions: parseValue(rows[29]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[30]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[31]?.[colOffset]),
+                        cpc: parseValue(rows[32]?.[colOffset]),
+                        clicks: parseValue(rows[33]?.[colOffset]),
+                        impressions: parseValue(rows[34]?.[colOffset]),
+                        ctr: parseValue(rows[35]?.[colOffset])
                     });
                 });
 
@@ -688,7 +712,14 @@
                         deals: parseValue(rows[41]?.[colOffset]),
                         dealPoints: parseValue(rows[42]?.[colOffset]),
                         generatedMRR: parseValue(rows[47]?.[colOffset]),
-                        closedMRR: parseValue(rows[48]?.[colOffset])
+                        closedMRR: parseValue(rows[48]?.[colOffset]),
+                        directConversions: parseValue(rows[49]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[50]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[51]?.[colOffset]),
+                        cpc: parseValue(rows[52]?.[colOffset]),
+                        clicks: parseValue(rows[53]?.[colOffset]),
+                        impressions: parseValue(rows[54]?.[colOffset]),
+                        ctr: parseValue(rows[55]?.[colOffset])
                     });
                 });
 
@@ -709,7 +740,14 @@
                         deals: parseValue(rows[61]?.[colOffset]),
                         dealPoints: parseValue(rows[62]?.[colOffset]),
                         generatedMRR: parseValue(rows[67]?.[colOffset]),
-                        closedMRR: parseValue(rows[68]?.[colOffset])
+                        closedMRR: parseValue(rows[68]?.[colOffset]),
+                        directConversions: parseValue(rows[69]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[70]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[71]?.[colOffset]),
+                        cpc: parseValue(rows[72]?.[colOffset]),
+                        clicks: parseValue(rows[73]?.[colOffset]),
+                        impressions: parseValue(rows[74]?.[colOffset]),
+                        ctr: parseValue(rows[75]?.[colOffset])
                     });
                 });
 
@@ -722,7 +760,7 @@
             };
 
             const getEmptyData = (month) => ({
-                summary: { spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0 },
+                summary: { spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0, directConversions: 0, directConversionsMRR: 0, directConversionsDealPoints: 0 },
                 weeks: WEEKS.map(week => ({ label: week, dates: WEEK_DATES[week], spend: 0, accounts: 0, demos: 0, deals: 0, dealPoints: 0, generatedMRR: 0, closedMRR: 0 })),
                 channels: [],
                 month
@@ -997,9 +1035,34 @@
                                     <div className="summary-value">{formatNumber(displaySummary.deals)}</div>
                                 </div>
                                 <div className="summary-card">
+                                    <div className="summary-icon dealpoints">{Icons.star}</div>
+                                    <div className="summary-label">Deal Points</div>
+                                    <div className="summary-value">{formatNumber(displaySummary.dealPoints)}</div>
+                                </div>
+                                <div className="summary-card">
                                     <div className="summary-icon mrr">{Icons.trending}</div>
                                     <div className="summary-label">Generated MRR</div>
                                     <div className="summary-value">{formatCurrency(displaySummary.generatedMRR)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon closedmrr">{Icons.check}</div>
+                                    <div className="summary-label">Closed MRR</div>
+                                    <div className="summary-value">{formatCurrency(displaySummary.closedMRR)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon directconv">{Icons.arrowUp}</div>
+                                    <div className="summary-label">Direct Conversions</div>
+                                    <div className="summary-value">{formatNumber(displaySummary.directConversions)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon directmrr">{Icons.award}</div>
+                                    <div className="summary-label">Direct Conv. MRR</div>
+                                    <div className="summary-value">{formatCurrency(displaySummary.directConversionsMRR)}</div>
+                                </div>
+                                <div className="summary-card">
+                                    <div className="summary-icon directdp">{Icons.star}</div>
+                                    <div className="summary-label">Direct Conv. Deal Pts</div>
+                                    <div className="summary-value">{formatNumber(displaySummary.directConversionsDealPoints)}</div>
                                 </div>
                                 <div className="summary-card">
                                     <div className="summary-icon cpa">{Icons.percent}</div>
@@ -1038,6 +1101,7 @@
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </div>
+                                <div style={{overflowX: 'auto'}}>
                                 <table className="data-table">
                                     <thead>
                                         <tr>
@@ -1046,7 +1110,16 @@
                                             <th onClick={() => handleSort('accounts')}>Accounts</th>
                                             <th onClick={() => handleSort('demos')}>Demos</th>
                                             <th onClick={() => handleSort('deals')}>Deals</th>
+                                            <th onClick={() => handleSort('dealPoints')}>Deal Pts</th>
                                             <th onClick={() => handleSort('generatedMRR')}>Gen. MRR</th>
+                                            <th onClick={() => handleSort('closedMRR')}>Closed MRR</th>
+                                            <th onClick={() => handleSort('directConversions')}>Dir. Conv</th>
+                                            <th onClick={() => handleSort('directConversionsMRR')}>Dir. MRR</th>
+                                            <th onClick={() => handleSort('directConversionsDealPoints')}>Dir. DP</th>
+                                            <th onClick={() => handleSort('clicks')}>Clicks</th>
+                                            <th onClick={() => handleSort('impressions')}>Impr.</th>
+                                            <th onClick={() => handleSort('cpc')}>CPC</th>
+                                            <th onClick={() => handleSort('ctr')}>CTR</th>
                                             <th>CPD</th>
                                         </tr>
                                     </thead>
@@ -1065,13 +1138,23 @@
                                                     <td>{formatNumber(channel.accounts)}</td>
                                                     <td>{formatNumber(channel.demos)}</td>
                                                     <td>{formatNumber(channel.deals)}</td>
+                                                    <td>{formatNumber(channel.dealPoints)}</td>
                                                     <td>{formatCurrency(channel.generatedMRR)}</td>
+                                                    <td>{formatCurrency(channel.closedMRR)}</td>
+                                                    <td>{formatNumber(channel.directConversions)}</td>
+                                                    <td>{formatCurrency(channel.directConversionsMRR)}</td>
+                                                    <td>{formatNumber(channel.directConversionsDealPoints)}</td>
+                                                    <td>{formatNumber(channel.clicks)}</td>
+                                                    <td>{formatNumber(channel.impressions)}</td>
+                                                    <td>{channel.cpc > 0 ? formatCurrency(channel.cpc) : '—'}</td>
+                                                    <td>{channel.ctr > 0 ? (channel.ctr * 100).toFixed(2) + '%' : '—'}</td>
                                                     <td>{cpd > 0 ? formatCurrency(cpd) : '—'}</td>
                                                 </tr>
                                             );
                                         })}
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
 
                             <div className="weekly-grid">
