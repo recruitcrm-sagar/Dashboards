@@ -2741,7 +2741,7 @@ Be direct and specific. No fluff.`;
             const fetchAllData = async (podKey = selectedPod) => {
                 const spreadsheetId = POD_SPREADSHEETS[podKey];
                 
-                // Special handling for Insights - fetch from all pods
+                // Special handling for Insights - fetch from ALL pods
                 if (podKey === 'insights') {
                 setRefreshing(true);
                 try {
@@ -2758,6 +2758,45 @@ Be direct and specific. No fluff.`;
                             }
                             conversionData['Overview'] = aggregateMonthsData(conversionData);
                             insightsData['conversion'] = conversionData;
+                        }
+                        
+                        // Fetch Brand Advocacy Pod data
+                        const brandSpreadsheet = POD_SPREADSHEETS['brand'];
+                        if (brandSpreadsheet) {
+                            const brandMonths = await checkAvailableMonths(brandSpreadsheet, 'brand');
+                            const brandData = {};
+                            for (const month of brandMonths) {
+                                const monthData = await fetchMonthData(month, brandSpreadsheet, 'brand');
+                                if (monthData) brandData[month] = monthData;
+                            }
+                            brandData['Overview'] = aggregateMonthsData(brandData);
+                            insightsData['brand'] = brandData;
+                        }
+                        
+                        // Fetch Awareness Pod data
+                        const awarenessSpreadsheet = POD_SPREADSHEETS['awareness'];
+                        if (awarenessSpreadsheet) {
+                            const awarenessMonths = await checkAvailableMonths(awarenessSpreadsheet, 'awareness');
+                            const awarenessData = {};
+                            for (const month of awarenessMonths) {
+                                const monthData = await fetchMonthData(month, awarenessSpreadsheet, 'awareness');
+                                if (monthData) awarenessData[month] = monthData;
+                            }
+                            awarenessData['Overview'] = aggregateMonthsData(awarenessData);
+                            insightsData['awareness'] = awarenessData;
+                        }
+                        
+                        // Fetch Misc Pod data
+                        const miscSpreadsheet = POD_SPREADSHEETS['misc'];
+                        if (miscSpreadsheet) {
+                            const miscMonths = await checkAvailableMonths(miscSpreadsheet, 'misc');
+                            const miscData = {};
+                            for (const month of miscMonths) {
+                                const monthData = await fetchMonthData(month, miscSpreadsheet, 'misc');
+                                if (monthData) miscData[month] = monthData;
+                            }
+                            miscData['Overview'] = aggregateMonthsData(miscData);
+                            insightsData['misc'] = miscData;
                         }
                         
                         // Fetch Outbound Pod data
@@ -2781,7 +2820,7 @@ Be direct and specific. No fluff.`;
                         setLastUpdated(now);
                         setNextRefresh(new Date(now.getTime() + 60 * 60 * 1000));
                         setError(null);
-                        showToast('Insights data loaded');
+                        showToast('Insights data loaded from all pods');
                     } catch (err) {
                         console.error('Error fetching insights:', err);
                         setError(err.message);
@@ -3979,17 +4018,21 @@ Be direct and specific. No fluff.`;
 
                             {/* Performance Highlights */}
                             {(() => {
-                                // Aggregate data from all pods
+                                // Aggregate data from ALL pods
                                 const conversionData = allPodsData?.['conversion']?.['Overview'] || allPodsData?.['conversion']?.['January'] || { summary: {}, channels: [] };
+                                const brandData = allPodsData?.['brand']?.['Overview'] || allPodsData?.['brand']?.['January'] || { summary: {}, channels: [] };
+                                const awarenessData = allPodsData?.['awareness']?.['Overview'] || allPodsData?.['awareness']?.['January'] || { summary: {}, channels: [] };
+                                const miscData = allPodsData?.['misc']?.['Overview'] || allPodsData?.['misc']?.['January'] || { summary: {}, channels: [] };
                                 const outboundData = allPodsData?.['outbound']?.['Overview'] || allPodsData?.['outbound']?.['January'] || { teamTotals: {}, sdrs: [] };
                                 
-                                const totalSpend = conversionData.summary?.spend || 0;
-                                const totalAccounts = conversionData.summary?.accounts || 0;
-                                const totalDemos = conversionData.summary?.demos || 0;
-                                const totalDeals = conversionData.summary?.deals || 0;
-                                const directConversions = conversionData.summary?.directConversions || 0;
-                                const generatedMRR = conversionData.summary?.generatedMRR || 0;
-                                const closedMRR = conversionData.summary?.closedMRR || 0;
+                                // Aggregate spend, demos, deals from all paid media pods
+                                const totalSpend = (conversionData.summary?.spend || 0) + (brandData.summary?.spend || 0) + (awarenessData.summary?.spend || 0) + (miscData.summary?.spend || 0);
+                                const totalAccounts = (conversionData.summary?.accounts || 0) + (brandData.summary?.accounts || 0) + (awarenessData.summary?.accounts || 0) + (miscData.summary?.accounts || 0);
+                                const totalDemos = (conversionData.summary?.demos || 0) + (brandData.summary?.demos || 0) + (awarenessData.summary?.demos || 0) + (miscData.summary?.demos || 0);
+                                const totalDeals = (conversionData.summary?.deals || 0) + (brandData.summary?.deals || 0) + (awarenessData.summary?.deals || 0) + (miscData.summary?.deals || 0);
+                                const directConversions = (conversionData.summary?.directConversions || 0) + (brandData.summary?.directConversions || 0) + (awarenessData.summary?.directConversions || 0) + (miscData.summary?.directConversions || 0);
+                                const generatedMRR = (conversionData.summary?.generatedMRR || 0) + (brandData.summary?.generatedMRR || 0) + (awarenessData.summary?.generatedMRR || 0) + (miscData.summary?.generatedMRR || 0);
+                                const closedMRR = (conversionData.summary?.closedMRR || 0) + (brandData.summary?.closedMRR || 0) + (awarenessData.summary?.closedMRR || 0) + (miscData.summary?.closedMRR || 0);
                                 const costPerDemo = totalSpend > 0 && totalDemos > 0 ? totalSpend / totalDemos : 0;
                                 const costPerDeal = totalSpend > 0 && totalDeals > 0 ? totalSpend / totalDeals : 0;
                                 const demoToDealRate = totalDemos > 0 && totalDeals > 0 ? (totalDeals / totalDemos * 100) : 0;
@@ -4003,15 +4046,35 @@ Be direct and specific. No fluff.`;
                                 const salesloftCalls = outboundData.teamTotals?.salesloftCalls || 0;
                                 const aiCalls = outboundData.teamTotals?.aiCalls || 0;
                                 
-                                // Find best performing channel
-                                const channels = conversionData.channels || [];
-                                const bestChannel = channels.reduce((best, ch) => 
-                                    (ch.deals > (best?.deals || 0)) ? ch : best, null);
-                                const worstCostChannel = channels.reduce((worst, ch) => {
+                                // Combine channels from ALL pods with pod labels
+                                const conversionChannels = (conversionData.channels || []).map(ch => ({ ...ch, pod: 'Conversion' }));
+                                const brandChannels = (brandData.channels || []).map(ch => ({ ...ch, pod: 'Brand Advocacy' }));
+                                const awarenessChannels = (awarenessData.channels || []).map(ch => ({ ...ch, pod: 'Awareness' }));
+                                const miscChannels = (miscData.channels || []).map(ch => ({ ...ch, pod: 'Misc' }));
+                                const allChannels = [...conversionChannels, ...brandChannels, ...awarenessChannels, ...miscChannels];
+                                
+                                // Filter to only channels with activity (spend > 0 or demos > 0 or deals > 0)
+                                const activeChannels = allChannels.filter(ch => ch.spend > 0 || ch.demos > 0 || ch.deals > 0);
+                                
+                                // Sort by deals (descending), then by demos, then by spend
+                                const sortedChannels = activeChannels.sort((a, b) => {
+                                    if (b.deals !== a.deals) return b.deals - a.deals;
+                                    if (b.demos !== a.demos) return b.demos - a.demos;
+                                    return b.spend - a.spend;
+                                });
+                                
+                                // Find best performing channel (by deals)
+                                const bestChannel = sortedChannels.length > 0 ? sortedChannels[0] : null;
+                                
+                                // Find worst cost channel (highest CPD with spend > 100)
+                                const worstCostChannel = allChannels.reduce((worst, ch) => {
                                     const cpd = ch.spend > 0 && ch.demos > 0 ? ch.spend / ch.demos : Infinity;
                                     const worstCpd = worst?.spend > 0 && worst?.demos > 0 ? worst.spend / worst.demos : Infinity;
                                     return cpd > worstCpd && ch.spend > 100 ? ch : worst;
                                 }, null);
+                                
+                                // Use sortedChannels for display
+                                const channels = sortedChannels;
                                 
                                 return (
                                     <>
@@ -4065,17 +4128,17 @@ Be direct and specific. No fluff.`;
 
                                     {/* Insight Cards */}
                                     <div className="insights-grid">
-                                        {/* Conversion Pod Insights */}
+                                        {/* All Pods Performance */}
                                         <div className={`insight-card ${totalDeals > 10 ? 'success' : 'warning'}`}>
                                             <div className="insight-card-header">
                                                 <div className="insight-card-icon">{Icons.zap}</div>
-                                                <div className="insight-card-title">Conversion Pod Performance</div>
+                                                <div className="insight-card-title">All Pods Performance</div>
                                             </div>
-                                            <div className="insight-metric">{totalDeals} Deals | {totalDemos} Demos</div>
+                                            <div className="insight-metric">{totalDeals} Deals | {totalDemos} Demos | {channels.length} Channels</div>
                                             <div className="insight-card-content">
                                                 {totalDeals > 10 
-                                                    ? `Strong deal generation with ${totalDeals} deals closed. Cost per deal is ${formatCurrency(costPerDeal)} with ${totalAccounts} accounts in pipeline.`
-                                                    : `${totalDeals} deals generated from ${totalDemos} demos. Consider optimizing targeting to improve demo-to-deal conversion rate of ${demoToDealRate.toFixed(1)}%.`
+                                                    ? `Strong deal generation across all pods with ${totalDeals} deals closed. Total spend: ${formatCurrency(totalSpend)}, CPD: ${formatCurrency(costPerDeal)}.`
+                                                    : `${totalDeals} deals from ${totalDemos} demos across ${channels.length} active channels. Optimize targeting to improve ${demoToDealRate.toFixed(1)}% conversion rate.`
                                                 }
                                             </div>
                                         </div>
@@ -4087,10 +4150,10 @@ Be direct and specific. No fluff.`;
                                                 <div className="insight-card-icon">{Icons.thumbsUp}</div>
                                                 <div className="insight-card-title">Top Performing Channel</div>
                                             </div>
-                                            <div className="insight-metric">{bestChannel.name}</div>
+                                            <div className="insight-metric">{bestChannel.name} ({bestChannel.pod})</div>
                                             <div className="insight-card-content">
                                                 Leading with {bestChannel.deals} deals and {bestChannel.demos} demos. 
-                                                Spend of {formatCurrency(bestChannel.spend)} yields strong ROI. 
+                                                Spend: {formatCurrency(bestChannel.spend)}. 
                                                 Consider increasing budget allocation to this channel.
                                             </div>
                                         </div>
@@ -4135,7 +4198,7 @@ Be direct and specific. No fluff.`;
                                                 <div className="insight-card-icon">{Icons.alertTriangle}</div>
                                                 <div className="insight-card-title">Attention Required</div>
                                             </div>
-                                            <div className="insight-metric">{worstCostChannel.name}</div>
+                                            <div className="insight-metric">{worstCostChannel.name} ({worstCostChannel.pod || 'Unknown'})</div>
                                             <div className="insight-card-content">
                                                 High cost per demo of {formatCurrency(worstCostChannel.spend / (worstCostChannel.demos || 1))} 
                                                 with only {worstCostChannel.demos} demos from {formatCurrency(worstCostChannel.spend)} spend. 
@@ -4173,7 +4236,7 @@ Be direct and specific. No fluff.`;
                                                 <div className="recommendation-title">Scale High-Performers</div>
                                                 <div className="recommendation-desc">
                                                     {bestChannel 
-                                                        ? `${bestChannel.name} is driving ${bestChannel.deals} deals. Consider increasing budget by 20-30% while monitoring CPA. Test new ad creatives to maintain performance at scale.`
+                                                        ? `${bestChannel.name} (${bestChannel.pod}) is driving ${bestChannel.deals} deals from ${bestChannel.demos} demos. Consider increasing budget by 20-30% while monitoring CPA. Spend: ${formatCurrency(bestChannel.spend)}.`
                                                         : 'Identify your best performing channel and consider increasing budget allocation while maintaining cost efficiency.'
                                                     }
                                                 </div>
@@ -4185,9 +4248,8 @@ Be direct and specific. No fluff.`;
                                             <div className="recommendation-content">
                                                 <div className="recommendation-title">Optimize Demo-to-Deal Conversion</div>
                                                 <div className="recommendation-desc">
-                                                    Current conversion rate is {demoToDealRate.toFixed(1)}%. Implement demo follow-up automation, 
-                                                    improve sales deck, and consider offering limited-time incentives to boost conversions. 
-                                                    Target: 40%+ conversion rate.
+                                                    Current all-pods conversion rate is {demoToDealRate.toFixed(1)}% ({totalDeals} deals from {totalDemos} demos across all pods). 
+                                                    Implement demo follow-up automation and improve sales deck. Target: 40%+ conversion rate.
                                                 </div>
                                             </div>
                                         </div>
@@ -4197,9 +4259,10 @@ Be direct and specific. No fluff.`;
                                             <div className="recommendation-content">
                                                 <div className="recommendation-title">Maximize Outbound Efficiency</div>
                                                 <div className="recommendation-desc">
-                                                    AI SDR made {formatNumber(aiCalls)} calls generating {outboundDemos} demos. 
-                                                    Increase AI SDR call volume during peak engagement hours (9-11 AM, 2-4 PM). 
-                                                    Improve cold email sequences for MQL conversion.
+                                                    {(salesloftCalls + aiCalls) > 0 
+                                                        ? `Outbound team made ${formatNumber(salesloftCalls + aiCalls)} total calls (${formatNumber(salesloftCalls)} Salesloft, ${formatNumber(aiCalls)} AI) generating ${outboundDemos} demos. Focus on peak engagement hours (9-11 AM, 2-4 PM).`
+                                                        : 'No outbound call data available. Consider implementing AI SDR for scalable outreach.'
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -4209,9 +4272,9 @@ Be direct and specific. No fluff.`;
                                             <div className="recommendation-content">
                                                 <div className="recommendation-title">Cross-Pod Synergies</div>
                                                 <div className="recommendation-desc">
+                                                    Total spend across all pods: {formatCurrency(totalSpend)}. 
                                                     Leverage Awareness Pod content for retargeting in Conversion Pod. 
-                                                    Use Brand Advocacy testimonials in outbound sequences. 
-                                                    Create unified messaging across all touchpoints for consistent brand experience.
+                                                    Use Brand Advocacy testimonials in outbound sequences for better conversion.
                                                 </div>
                                             </div>
                                         </div>
@@ -4221,24 +4284,29 @@ Be direct and specific. No fluff.`;
                                             <div className="recommendation-content">
                                                 <div className="recommendation-title">Budget Reallocation Strategy</div>
                                                 <div className="recommendation-desc">
-                                                    Review channels with CPD above {formatCurrency(costPerDemo * 1.5)}. 
-                                                    Reallocate underperforming budget to top 3 channels. 
-                                                    Consider A/B testing new channels with small budget before full commitment.
+                                                    {costPerDemo > 0 
+                                                        ? `Average CPD across all pods: ${formatCurrency(costPerDemo)}. Review channels with CPD above ${formatCurrency(costPerDemo * 1.5)}. Top 3 channels by deals should get 60%+ of budget.`
+                                                        : 'Once channels have demo data, analyze CPD to identify reallocation opportunities.'
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Channel Performance Summary */}
+                                    {/* Channel Performance Summary - All Pods */}
                                     <div className="table-card">
                                         <h3 style={{margin: '0 0 16px 0', color: 'var(--text-primary)'}}>
-                                            {Icons.pieChart} Channel Performance Summary
+                                            {Icons.pieChart} Channel Performance Summary (All Pods)
                                         </h3>
+                                        <div style={{fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px'}}>
+                                            Showing {channels.length > 0 ? Math.min(channels.length, 15) : 0} of {channels.length} active channels across Conversion, Brand Advocacy, Awareness, and Misc pods
+                                        </div>
                                         <div style={{overflowX: 'auto'}}>
                                             <table className="data-table">
                                                 <thead>
                                                     <tr>
                                                         <th>Channel</th>
+                                                        <th>Pod</th>
                                                         <th>Spend</th>
                                                         <th>Demos</th>
                                                         <th>Deals</th>
@@ -4248,14 +4316,39 @@ Be direct and specific. No fluff.`;
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {channels.slice(0, 10).map((ch, idx) => {
+                                                    {channels.length === 0 ? (
+                                                        <tr>
+                                                            <td colSpan="8" style={{textAlign: 'center', padding: '24px', color: 'var(--text-secondary)'}}>
+                                                                No active channels with data. Channels will appear once they have spend, demos, or deals.
+                                                            </td>
+                                                        </tr>
+                                                    ) : channels.slice(0, 15).map((ch, idx) => {
                                                         const cpd = ch.spend > 0 && ch.demos > 0 ? ch.spend / ch.demos : 0;
                                                         const avgCpd = costPerDemo || 150;
                                                         const efficiency = cpd === 0 ? 'N/A' : cpd < avgCpd * 0.7 ? 'Excellent' : cpd < avgCpd ? 'Good' : cpd < avgCpd * 1.5 ? 'Fair' : 'Poor';
                                                         const effColor = efficiency === 'Excellent' ? '#10b981' : efficiency === 'Good' ? '#22c55e' : efficiency === 'Fair' ? '#f59e0b' : efficiency === 'Poor' ? '#ef4444' : '#64748b';
+                                                        const podColors = {
+                                                            'Conversion': '#10b981',
+                                                            'Brand Advocacy': '#ec4899',
+                                                            'Awareness': '#f59e0b',
+                                                            'Misc': '#64748b'
+                                                        };
                                                         return (
                                                             <tr key={idx}>
                                                                 <td style={{fontWeight: 500}}>{ch.name}</td>
+                                                                <td>
+                                                                    <span style={{
+                                                                        display: 'inline-block',
+                                                                        padding: '2px 8px',
+                                                                        borderRadius: '4px',
+                                                                        fontSize: '11px',
+                                                                        fontWeight: 600,
+                                                                        background: `${podColors[ch.pod] || '#64748b'}20`,
+                                                                        color: podColors[ch.pod] || '#64748b'
+                                                                    }}>
+                                                                        {ch.pod}
+                                                                    </span>
+                                                                </td>
                                                                 <td>{formatCurrency(ch.spend)}</td>
                                                                 <td>{ch.demos}</td>
                                                                 <td>{ch.deals}</td>
