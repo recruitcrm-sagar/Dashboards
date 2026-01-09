@@ -189,6 +189,179 @@
         .pod-icon.untracked { background: #e2e8f0; color: #64748b; }
         .pod-icon.leadership { background: #fef3c7; color: #b45309; }
         .pod-icon.outbound { background: #e0e7ff; color: #4f46e5; }
+        .pod-icon.insights { background: #fef9c3; color: #ca8a04; }
+
+        /* Insights Section Styles */
+        .insights-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .insights-header-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .insights-header-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+        .insights-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .insights-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 1200px) {
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .insight-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            border-left: 4px solid;
+        }
+        .insight-card.success { border-left-color: #10b981; }
+        .insight-card.warning { border-left-color: #f59e0b; }
+        .insight-card.info { border-left-color: #3b82f6; }
+        .insight-card.danger { border-left-color: #ef4444; }
+        .insight-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .insight-card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .insight-card.success .insight-card-icon { background: #d1fae5; color: #059669; }
+        .insight-card.warning .insight-card-icon { background: #fef3c7; color: #d97706; }
+        .insight-card.info .insight-card-icon { background: #dbeafe; color: #2563eb; }
+        .insight-card.danger .insight-card-icon { background: #fee2e2; color: #dc2626; }
+        .insight-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .insight-card-content {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .insight-metric {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 8px 0;
+        }
+        .recommendations-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .recommendations-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .recommendation-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }
+        .recommendation-item:last-child { margin-bottom: 0; }
+        .recommendation-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .recommendation-content {
+            flex: 1;
+        }
+        .recommendation-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .recommendation-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .performance-highlights {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1200px) {
+            .performance-highlights {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .highlight-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            text-align: center;
+        }
+        .highlight-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .highlight-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .highlight-change {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .highlight-change.positive { color: #10b981; }
+        .highlight-change.negative { color: #ef4444; }
 
         /* Leadership Dashboard Styles */
         .leadership-title {
@@ -1123,7 +1296,12 @@
             help: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
             crown: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>,
             send: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
-            globe: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            globe: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>,
+            lightbulb: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 01-1 1H9a1 1 0 01-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z"/></svg>,
+            alertTriangle: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+            thumbsUp: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>,
+            activity: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+            pieChart: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>
         };
 
         const PODS = [
@@ -1133,7 +1311,8 @@
             { key: 'brand', label: 'Brand Advocacy Pod', icon: 'heart', iconClass: 'brand' },
             { key: 'conversion', label: 'Conversion Pod', icon: 'zap', iconClass: 'conversion' },
             { key: 'untracked', label: 'Misc Pod', icon: 'help', iconClass: 'untracked' },
-            { key: 'outbound', label: 'Outbound', icon: 'send', iconClass: 'outbound' }
+            { key: 'outbound', label: 'Outbound', icon: 'send', iconClass: 'outbound' },
+            { key: 'insights', label: 'Insights', icon: 'lightbulb', iconClass: 'insights' }
         ];
 
         function Dashboard() {
@@ -1144,6 +1323,7 @@
             const [searchTerm, setSearchTerm] = useState('');
             const [sortConfig, setSortConfig] = useState({ key: 'spend', direction: 'desc' });
             const [data, setData] = useState({});
+            const [allPodsData, setAllPodsData] = useState({}); // Store data from all pods for Insights
             const [availableMonths, setAvailableMonths] = useState(['January']);
             const [loading, setLoading] = useState(true);
             const [refreshing, setRefreshing] = useState(false);
@@ -2261,6 +2441,59 @@
 
             const fetchAllData = async (podKey = selectedPod) => {
                 const spreadsheetId = POD_SPREADSHEETS[podKey];
+                
+                // Special handling for Insights - fetch from all pods
+                if (podKey === 'insights') {
+                    setRefreshing(true);
+                    try {
+                        const insightsData = {};
+                        
+                        // Fetch Conversion Pod data
+                        const conversionSpreadsheet = POD_SPREADSHEETS['conversion'];
+                        if (conversionSpreadsheet) {
+                            const conversionMonths = await checkAvailableMonths(conversionSpreadsheet, 'conversion');
+                            const conversionData = {};
+                            for (const month of conversionMonths) {
+                                const monthData = await fetchMonthData(month, conversionSpreadsheet, 'conversion');
+                                if (monthData) conversionData[month] = monthData;
+                            }
+                            conversionData['Overview'] = aggregateMonthsData(conversionData);
+                            insightsData['conversion'] = conversionData;
+                        }
+                        
+                        // Fetch Outbound Pod data
+                        const outboundSpreadsheet = POD_SPREADSHEETS['outbound'];
+                        if (outboundSpreadsheet) {
+                            const outboundMonths = await checkAvailableMonths(outboundSpreadsheet, 'outbound');
+                            const outboundData = {};
+                            for (const month of outboundMonths) {
+                                const monthData = await fetchMonthData(month, outboundSpreadsheet, 'outbound');
+                                if (monthData) outboundData[month] = monthData;
+                            }
+                            outboundData['Overview'] = aggregateMonthsData(outboundData);
+                            insightsData['outbound'] = outboundData;
+                        }
+                        
+                        setAllPodsData(insightsData);
+                        setData({});
+                        setAvailableMonths([]);
+                        
+                        const now = new Date();
+                        setLastUpdated(now);
+                        setNextRefresh(new Date(now.getTime() + 60 * 60 * 1000));
+                        setError(null);
+                        showToast('Insights data loaded');
+                    } catch (err) {
+                        console.error('Error fetching insights:', err);
+                        setError(err.message);
+                        showToast('Failed to load insights: ' + err.message, true);
+                    } finally {
+                        setLoading(false);
+                        setRefreshing(false);
+                    }
+                    return;
+                }
+                
                 if (!spreadsheetId) {
                     // No spreadsheet configured for this pod
                     setData({});
@@ -2342,7 +2575,8 @@
 
             // Fetch data when pod changes
             useEffect(() => {
-                if (POD_SPREADSHEETS[selectedPod]) {
+                // Also trigger for special pods: insights, leadership
+                if (POD_SPREADSHEETS[selectedPod] || selectedPod === 'insights' || selectedPod === 'leadership') {
                     setLoading(true);
                     // Default to Overview for pods with monthly data (including Leadership now)
                     if (selectedPod !== 'all') {
@@ -3138,6 +3372,304 @@
                                     ))}
                                 </div>
                                 </>
+                                );
+                            })()}
+                        </div>
+                        </>
+                        ) : selectedPod === 'insights' ? (
+                        /* INSIGHTS SECTION - Analytics and Recommendations */
+                        <>
+                        <div className="filter-bar">
+                            <div className="filter-group">
+                                <span className="filter-label" style={{fontWeight: 600, color: 'var(--text-primary)'}}>
+                                    AI-Powered Insights & Recommendations
+                                </span>
+                            </div>
+                            <div style={{flex: 1}}></div>
+                            {lastUpdated && <span className="filter-label">Updated: {lastUpdated.toLocaleTimeString()}</span>}
+                        </div>
+
+                        <div className="content-area">
+                            {/* Header */}
+                            <div className="insights-header">
+                                <div className="insights-header-icon">
+                                    {Icons.lightbulb}
+                                </div>
+                                <div>
+                                    <div className="insights-title">Performance Insights</div>
+                                    <div className="insights-subtitle">Data-driven analysis across all pods</div>
+                                </div>
+                            </div>
+
+                            {/* Performance Highlights */}
+                            {(() => {
+                                // Aggregate data from all pods
+                                const conversionData = allPodsData['conversion']?.['Overview'] || allPodsData['conversion']?.['January'] || { summary: {} };
+                                const outboundData = allPodsData['outbound']?.['Overview'] || allPodsData['outbound']?.['January'] || { teamTotals: {} };
+                                
+                                const totalSpend = conversionData.summary?.spend || 0;
+                                const totalAccounts = conversionData.summary?.accounts || 0;
+                                const totalDemos = conversionData.summary?.demos || 0;
+                                const totalDeals = conversionData.summary?.deals || 0;
+                                const costPerDemo = totalSpend > 0 && totalDemos > 0 ? totalSpend / totalDemos : 0;
+                                const costPerDeal = totalSpend > 0 && totalDeals > 0 ? totalSpend / totalDeals : 0;
+                                const demoToAccountRate = totalAccounts > 0 && totalDemos > 0 ? (totalDemos / totalAccounts * 100) : 0;
+                                const dealToDemoRate = totalDemos > 0 && totalDeals > 0 ? (totalDeals / totalDemos * 100) : 0;
+                                
+                                // Outbound data
+                                const outboundDemos = outboundData.teamTotals?.totalDemos || 0;
+                                const outboundDeals = outboundData.teamTotals?.totalDeals || 0;
+                                const outboundPipeline = outboundData.teamTotals?.mrrPipeline || 0;
+                                const salesloftCalls = outboundData.teamTotals?.salesloftCalls || 0;
+                                const aiCalls = outboundData.teamTotals?.aiCalls || 0;
+                                
+                                // Find best performing channel
+                                const channels = conversionData.channels || [];
+                                const bestChannel = channels.reduce((best, ch) => 
+                                    (ch.deals > (best?.deals || 0)) ? ch : best, null);
+                                const worstCostChannel = channels.reduce((worst, ch) => {
+                                    const cpd = ch.spend > 0 && ch.demos > 0 ? ch.spend / ch.demos : Infinity;
+                                    const worstCpd = worst?.spend > 0 && worst?.demos > 0 ? worst.spend / worst.demos : Infinity;
+                                    return cpd > worstCpd && ch.spend > 100 ? ch : worst;
+                                }, null);
+                                
+                                return (
+                                    <>
+                                    {/* Key Metrics Summary */}
+                                    <div className="performance-highlights">
+                                        <div className="highlight-card">
+                                            <div className="highlight-label">Total Ad Spend</div>
+                                            <div className="highlight-value">{formatCurrency(totalSpend)}</div>
+                                            <div className="highlight-change positive">Conversion Pod</div>
+                                        </div>
+                                        <div className="highlight-card">
+                                            <div className="highlight-label">Demo Conversion Rate</div>
+                                            <div className="highlight-value">{demoToAccountRate.toFixed(1)}%</div>
+                                            <div className="highlight-change">Account → Demo</div>
+                                        </div>
+                                        <div className="highlight-card">
+                                            <div className="highlight-label">Deal Close Rate</div>
+                                            <div className="highlight-value">{dealToDemoRate.toFixed(1)}%</div>
+                                            <div className="highlight-change">Demo → Deal</div>
+                                        </div>
+                                        <div className="highlight-card">
+                                            <div className="highlight-label">Outbound Pipeline</div>
+                                            <div className="highlight-value">{formatCurrency(outboundPipeline)}</div>
+                                            <div className="highlight-change positive">{outboundDeals} deals</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Insight Cards */}
+                                    <div className="insights-grid">
+                                        {/* Conversion Pod Insights */}
+                                        <div className={`insight-card ${totalDeals > 10 ? 'success' : 'warning'}`}>
+                                            <div className="insight-card-header">
+                                                <div className="insight-card-icon">{Icons.zap}</div>
+                                                <div className="insight-card-title">Conversion Pod Performance</div>
+                                            </div>
+                                            <div className="insight-metric">{totalDeals} Deals | {totalDemos} Demos</div>
+                                            <div className="insight-card-content">
+                                                {totalDeals > 10 
+                                                    ? `Strong deal generation with ${totalDeals} deals closed. Cost per deal is ${formatCurrency(costPerDeal)} with ${totalAccounts} accounts in pipeline.`
+                                                    : `${totalDeals} deals generated from ${totalDemos} demos. Consider optimizing targeting to improve demo-to-deal conversion rate of ${dealToDemoRate.toFixed(1)}%.`
+                                                }
+                                            </div>
+                                        </div>
+
+                                        {/* Best Channel */}
+                                        {bestChannel && (
+                                        <div className="insight-card success">
+                                            <div className="insight-card-header">
+                                                <div className="insight-card-icon">{Icons.thumbsUp}</div>
+                                                <div className="insight-card-title">Top Performing Channel</div>
+                                            </div>
+                                            <div className="insight-metric">{bestChannel.name}</div>
+                                            <div className="insight-card-content">
+                                                Leading with {bestChannel.deals} deals and {bestChannel.demos} demos. 
+                                                Spend of {formatCurrency(bestChannel.spend)} yields strong ROI. 
+                                                Consider increasing budget allocation to this channel.
+                                            </div>
+                                        </div>
+                                        )}
+
+                                        {/* Outbound Insights */}
+                                        <div className={`insight-card ${outboundDeals > 0 ? 'info' : 'warning'}`}>
+                                            <div className="insight-card-header">
+                                                <div className="insight-card-icon">{Icons.phone}</div>
+                                                <div className="insight-card-title">Outbound Performance</div>
+                                            </div>
+                                            <div className="insight-metric">{formatNumber(salesloftCalls + aiCalls)} Total Calls</div>
+                                            <div className="insight-card-content">
+                                                {outboundDeals > 0 
+                                                    ? `Outbound team generated ${outboundDeals} deals from ${outboundDemos} demos with ${formatCurrency(outboundPipeline)} in pipeline. AI SDR contributing ${formatNumber(aiCalls)} calls.`
+                                                    : `${formatNumber(salesloftCalls)} Salesloft calls and ${formatNumber(aiCalls)} AI calls made. Focus on improving call-to-demo conversion to generate deals.`
+                                                }
+                                            </div>
+                                        </div>
+
+                                        {/* Cost Efficiency */}
+                                        <div className={`insight-card ${costPerDemo < 200 ? 'success' : 'warning'}`}>
+                                            <div className="insight-card-header">
+                                                <div className="insight-card-icon">{Icons.dollar}</div>
+                                                <div className="insight-card-title">Cost Efficiency Analysis</div>
+                                            </div>
+                                            <div className="insight-metric">{formatCurrency(costPerDemo)} per Demo</div>
+                                            <div className="insight-card-content">
+                                                Average cost per demo is {formatCurrency(costPerDemo)}, 
+                                                cost per deal is {formatCurrency(costPerDeal)}. 
+                                                {costPerDemo < 200 
+                                                    ? 'Costs are within healthy range. Maintain current optimization strategy.'
+                                                    : 'Consider reviewing underperforming channels to improve cost efficiency.'
+                                                }
+                                            </div>
+                                        </div>
+
+                                        {/* Channel Warning */}
+                                        {worstCostChannel && worstCostChannel.spend > 100 && (
+                                        <div className="insight-card danger">
+                                            <div className="insight-card-header">
+                                                <div className="insight-card-icon">{Icons.alertTriangle}</div>
+                                                <div className="insight-card-title">Attention Required</div>
+                                            </div>
+                                            <div className="insight-metric">{worstCostChannel.name}</div>
+                                            <div className="insight-card-content">
+                                                High cost per demo of {formatCurrency(worstCostChannel.spend / (worstCostChannel.demos || 1))} 
+                                                with only {worstCostChannel.demos} demos from {formatCurrency(worstCostChannel.spend)} spend. 
+                                                Evaluate if continued investment is justified or consider pausing this channel.
+                                            </div>
+                                        </div>
+                                        )}
+
+                                        {/* Funnel Analysis */}
+                                        <div className="insight-card info">
+                                            <div className="insight-card-header">
+                                                <div className="insight-card-icon">{Icons.activity}</div>
+                                                <div className="insight-card-title">Funnel Analysis</div>
+                                            </div>
+                                            <div className="insight-metric">{totalAccounts} → {totalDemos} → {totalDeals}</div>
+                                            <div className="insight-card-content">
+                                                Funnel progression: {totalAccounts} accounts → {totalDemos} demos ({demoToAccountRate.toFixed(0)}%) → {totalDeals} deals ({dealToDemoRate.toFixed(0)}%). 
+                                                {demoToAccountRate > 50 
+                                                    ? 'Strong account-to-demo conversion indicates good lead quality.'
+                                                    : 'Account-to-demo conversion could be improved with better follow-up sequences.'
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Recommendations */}
+                                    <div className="recommendations-section">
+                                        <div className="recommendations-title">
+                                            {Icons.lightbulb} Strategic Recommendations
+                                        </div>
+                                        
+                                        <div className="recommendation-item">
+                                            <div className="recommendation-number">1</div>
+                                            <div className="recommendation-content">
+                                                <div className="recommendation-title">Scale High-Performers</div>
+                                                <div className="recommendation-desc">
+                                                    {bestChannel 
+                                                        ? `${bestChannel.name} is driving ${bestChannel.deals} deals. Consider increasing budget by 20-30% while monitoring CPA. Test new ad creatives to maintain performance at scale.`
+                                                        : 'Identify your best performing channel and consider increasing budget allocation while maintaining cost efficiency.'
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="recommendation-item">
+                                            <div className="recommendation-number">2</div>
+                                            <div className="recommendation-content">
+                                                <div className="recommendation-title">Optimize Demo-to-Deal Conversion</div>
+                                                <div className="recommendation-desc">
+                                                    Current conversion rate is {dealToDemoRate.toFixed(1)}%. Implement demo follow-up automation, 
+                                                    improve sales deck, and consider offering limited-time incentives to boost conversions. 
+                                                    Target: 40%+ conversion rate.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="recommendation-item">
+                                            <div className="recommendation-number">3</div>
+                                            <div className="recommendation-content">
+                                                <div className="recommendation-title">Maximize Outbound Efficiency</div>
+                                                <div className="recommendation-desc">
+                                                    AI SDR made {formatNumber(aiCalls)} calls generating {outboundDemos} demos. 
+                                                    Increase AI SDR call volume during peak engagement hours (9-11 AM, 2-4 PM). 
+                                                    Improve cold email sequences for MQL conversion.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="recommendation-item">
+                                            <div className="recommendation-number">4</div>
+                                            <div className="recommendation-content">
+                                                <div className="recommendation-title">Cross-Pod Synergies</div>
+                                                <div className="recommendation-desc">
+                                                    Leverage Awareness Pod content for retargeting in Conversion Pod. 
+                                                    Use Brand Advocacy testimonials in outbound sequences. 
+                                                    Create unified messaging across all touchpoints for consistent brand experience.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="recommendation-item">
+                                            <div className="recommendation-number">5</div>
+                                            <div className="recommendation-content">
+                                                <div className="recommendation-title">Budget Reallocation Strategy</div>
+                                                <div className="recommendation-desc">
+                                                    Review channels with CPD above {formatCurrency(costPerDemo * 1.5)}. 
+                                                    Reallocate underperforming budget to top 3 channels. 
+                                                    Consider A/B testing new channels with small budget before full commitment.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Channel Performance Summary */}
+                                    <div className="table-card">
+                                        <h3 style={{margin: '0 0 16px 0', color: 'var(--text-primary)'}}>
+                                            {Icons.pieChart} Channel Performance Summary
+                                        </h3>
+                                        <div style={{overflowX: 'auto'}}>
+                                            <table className="data-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Channel</th>
+                                                        <th>Spend</th>
+                                                        <th>Demos</th>
+                                                        <th>Deals</th>
+                                                        <th>CPD</th>
+                                                        <th>Efficiency</th>
+                                                        <th>Recommendation</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {channels.slice(0, 10).map((ch, idx) => {
+                                                        const cpd = ch.spend > 0 && ch.demos > 0 ? ch.spend / ch.demos : 0;
+                                                        const avgCpd = costPerDemo || 150;
+                                                        const efficiency = cpd === 0 ? 'N/A' : cpd < avgCpd * 0.7 ? 'Excellent' : cpd < avgCpd ? 'Good' : cpd < avgCpd * 1.5 ? 'Fair' : 'Poor';
+                                                        const effColor = efficiency === 'Excellent' ? '#10b981' : efficiency === 'Good' ? '#22c55e' : efficiency === 'Fair' ? '#f59e0b' : efficiency === 'Poor' ? '#ef4444' : '#64748b';
+                                                        return (
+                                                            <tr key={idx}>
+                                                                <td style={{fontWeight: 500}}>{ch.name}</td>
+                                                                <td>{formatCurrency(ch.spend)}</td>
+                                                                <td>{ch.demos}</td>
+                                                                <td>{ch.deals}</td>
+                                                                <td>{formatCurrency(cpd)}</td>
+                                                                <td style={{color: effColor, fontWeight: 600}}>{efficiency}</td>
+                                                                <td style={{fontSize: '12px', color: 'var(--text-secondary)'}}>
+                                                                    {efficiency === 'Excellent' || efficiency === 'Good' ? 'Scale budget ↑' : 
+                                                                     efficiency === 'Fair' ? 'Optimize targeting' : 
+                                                                     efficiency === 'Poor' ? 'Review or pause' : 'Need more data'}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    </>
                                 );
                             })()}
                         </div>
