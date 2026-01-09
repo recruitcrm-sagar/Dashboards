@@ -1262,7 +1262,7 @@
             all: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs',
             leadership: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs', // Uses same overview sheet
             outbound: '1bRp9hnQdOnppaoK6WsPdzYj2XeedO1G5TQ4iqJcIWlQ', // Independent outbound sheet
-            untracked: '1X6LTS4QeQSSWMHNyDwEV4PbRORC2zWtyx0OjlXLjKFY' // Misc Pod spreadsheet
+            misc: '1X6LTS4QeQSSWMHNyDwEV4PbRORC2zWtyx0OjlXLjKFY' // Misc Pod spreadsheet
         };
         // ============================================
 
@@ -2381,11 +2381,11 @@ Be direct and specific. No fluff.`;
             // Fetch Leadership data from all pods for a specific month
             const fetchLeadershipMonthData = async (month) => {
                 try {
-                    // Fetch data from each pod for the given month
+                    // Fetch data from each pod for the given month (including Misc Pod)
                     const conversionUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.conversion}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
                     const brandUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.brand}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
                     const awarenessUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.awareness}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
-                    const miscUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.untracked}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
+                    const miscUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.misc}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
 
                     const [conversionResp, brandResp, awarenessResp, miscResp] = await Promise.all([
                         fetch(conversionUrl),
@@ -2399,7 +2399,7 @@ Be direct and specific. No fluff.`;
                     const awarenessResult = awarenessResp.ok ? await awarenessResp.json() : { values: [] };
                     const miscResult = miscResp.ok ? await miscResp.json() : { values: [] };
 
-                    // Process each pod's data
+                    // Process each pod's data (Misc Pod uses same structure as Conversion Pod)
                     const conversionData = processSheetData(conversionResult.values || [], month);
                     const brandData = processBrandAdvocacyData(brandResult.values || [], month);
                     const awarenessData = processAwarenessData(awarenessResult.values || [], month);
