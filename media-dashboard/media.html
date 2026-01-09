@@ -3821,8 +3821,8 @@ Be direct and specific. No fluff.`;
                             {/* Performance Highlights */}
                             {(() => {
                                 // Aggregate data from all pods
-                                const conversionData = allPodsData['conversion']?.['Overview'] || allPodsData['conversion']?.['January'] || { summary: {} };
-                                const outboundData = allPodsData['outbound']?.['Overview'] || allPodsData['outbound']?.['January'] || { teamTotals: {} };
+                                const conversionData = allPodsData?.['conversion']?.['Overview'] || allPodsData?.['conversion']?.['January'] || { summary: {}, channels: [] };
+                                const outboundData = allPodsData?.['outbound']?.['Overview'] || allPodsData?.['outbound']?.['January'] || { teamTotals: {}, sdrs: [] };
                                 
                                 const totalSpend = conversionData.summary?.spend || 0;
                                 const totalAccounts = conversionData.summary?.accounts || 0;
