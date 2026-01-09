@@ -1428,62 +1428,27 @@
                     const outboundTotals = outboundData?.teamTotals || {};
                     const sdrs = outboundData?.sdrs || [];
                     
-                    // Create detailed prompt with all data
-                    const prompt = `You are an expert marketing analytics consultant analyzing RecruitCRM's media performance dashboard. Analyze this data and provide actionable insights.
+                    // Create concise prompt for short insights
+                    const prompt = `Analyze this marketing data and give me a BRIEF, actionable summary.
 
-## CONVERSION POD DATA (Paid Advertising)
-- Total Spend: $${convSummary.spend || 0}
-- Accounts Generated: ${convSummary.accounts || 0}
-- Demos Scheduled: ${convSummary.demos || 0}
-- Deals Closed: ${convSummary.deals || 0}
-- Deal Points: ${convSummary.dealPoints || 0}
-- Cost Per Account: $${convSummary.accounts > 0 ? (convSummary.spend / convSummary.accounts).toFixed(2) : 0}
-- Cost Per Demo: $${convSummary.demos > 0 ? (convSummary.spend / convSummary.demos).toFixed(2) : 0}
-- Cost Per Deal: $${convSummary.deals > 0 ? (convSummary.spend / convSummary.deals).toFixed(2) : 0}
-- Generated MRR: $${convSummary.generatedMRR || 0}
-- Closed MRR: $${convSummary.closedMRR || 0}
-- Demo-to-Deal Rate: ${convSummary.demos > 0 ? ((convSummary.deals / convSummary.demos) * 100).toFixed(1) : 0}%
-- Account-to-Demo Rate: ${convSummary.accounts > 0 ? ((convSummary.demos / convSummary.accounts) * 100).toFixed(1) : 0}%
+DATA:
+- Spend: $${convSummary.spend || 0} | Demos: ${convSummary.demos || 0} | Deals: ${convSummary.deals || 0}
+- Cost/Demo: $${convSummary.demos > 0 ? (convSummary.spend / convSummary.demos).toFixed(0) : 0} | Cost/Deal: $${convSummary.deals > 0 ? (convSummary.spend / convSummary.deals).toFixed(0) : 0}
+- Demo→Deal Rate: ${convSummary.demos > 0 ? ((convSummary.deals / convSummary.demos) * 100).toFixed(0) : 0}%
+- Top Channels: ${channels.slice(0, 5).map(ch => `${ch.name}($${ch.spend}→${ch.deals}deals)`).join(', ')}
+- Outbound: ${outboundTotals.salesloftCalls || 0} calls → ${outboundTotals.totalDemos || 0} demos → ${outboundTotals.totalDeals || 0} deals
 
-## CHANNEL BREAKDOWN (Top 10 by Spend)
-${channels.slice(0, 10).map(ch => `- ${ch.name}: Spend $${ch.spend}, Accounts ${ch.accounts}, Demos ${ch.demos}, Deals ${ch.deals}`).join('\n')}
+Respond in this EXACT format (keep each section to 1-2 lines max):
 
-## OUTBOUND POD DATA (SDR Team)
-- Salesloft Calls: ${outboundTotals.salesloftCalls || 0}
-- Salesloft Connected: ${outboundTotals.salesloftConnected || 0}
-- AI Calls: ${outboundTotals.aiCalls || 0}
-- AI Connected: ${outboundTotals.aiCallsConnected || 0}
-- Total Demos from Outbound: ${outboundTotals.totalDemos || 0}
-- Total Deals from Outbound: ${outboundTotals.totalDeals || 0}
-- MRR Pipeline: $${outboundTotals.mrrPipeline || 0}
-- Closed MRR: $${outboundTotals.closedMRR || 0}
+**📊 Summary:** [One sentence on overall performance]
 
-## SDR PERFORMANCE
-${sdrs.map(sdr => `- ${sdr.name}: ${sdr.salesloftCalls || 0} calls, ${sdr.totalDemos || 0} demos, ${sdr.totalDeals || 0} deals`).join('\n')}
+**✅ What's Working:** [2-3 bullet points, one line each]
 
----
+**⚠️ Fix This:** [2-3 bullet points, one line each]
 
-Please provide a comprehensive analysis with the following sections. Use markdown formatting:
+**💡 Actions:** [3 specific actions with expected impact]
 
-## 🎯 Executive Summary
-A 2-3 sentence overview of overall performance.
-
-## 📈 Key Performance Highlights
-List 3-4 standout positive metrics or achievements.
-
-## ⚠️ Areas of Concern
-Identify 2-3 metrics or trends that need attention.
-
-## 💡 Top Recommendations
-Provide 4-5 specific, actionable recommendations with expected impact. Be specific about channels, budgets, and tactics.
-
-## 🔮 Strategic Insights
-2-3 deeper insights about patterns, opportunities, or strategic considerations.
-
-## 📊 Channel Analysis
-Brief analysis of which channels are performing best/worst and why.
-
-Keep the response concise but insightful. Focus on actionable advice that can improve ROI.`;
+Be direct and specific. No fluff.`;
 
                     // Check for API key
                     const apiKey = getAnthropicKey();
@@ -1502,7 +1467,7 @@ Keep the response concise but insightful. Focus on actionable advice that can im
                         },
                         body: JSON.stringify({
                             model: CLAUDE_MODEL,
-                            max_tokens: 2000,
+                            max_tokens: 600,
                             messages: [
                                 {
                                     role: 'user',
