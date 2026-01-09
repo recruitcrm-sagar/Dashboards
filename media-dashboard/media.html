@@ -888,6 +888,8 @@
         .channel-icon.brand { background: #ec4899; }
         .channel-icon.conversion { background: #10b981; }
         .channel-icon.misc { background: #64748b; }
+        .channel-icon.notset { background: #94a3b8; }
+        .channel-icon.direct { background: #22c55e; }
 
         /* Outbound channel icons */
         .channel-icon.colddata { background: #3b82f6; }
@@ -1637,6 +1639,92 @@ Be direct and specific. No fluff.`;
                 return { summary, weeks, channels, month };
             };
 
+            // Process Misc Pod sheet data (3 channels: Not set, Direct, Marketing email id)
+            const processMiscPodData = (rows, month) => {
+                if (!rows || rows.length === 0) return getEmptyData(month);
+
+                // Misc Pod has a simpler structure
+                // Summary data from Column J (index 9) - "January Stats" column
+                // Or from Column B if structure is same as Conversion Pod
+                const summaryCol = 9; // January Stats column
+                
+                const summary = {
+                    spend: parseValue(rows[1]?.[summaryCol]) || parseValue(rows[1]?.[1]),
+                    accounts: parseValue(rows[2]?.[summaryCol]) || parseValue(rows[2]?.[1]),
+                    demos: parseValue(rows[3]?.[summaryCol]) || parseValue(rows[3]?.[1]),
+                    deals: parseValue(rows[4]?.[summaryCol]) || parseValue(rows[4]?.[1]),
+                    dealPoints: parseValue(rows[5]?.[summaryCol]) || parseValue(rows[5]?.[1]),
+                    generatedMRR: parseValue(rows[10]?.[summaryCol]) || parseValue(rows[10]?.[1]),
+                    closedMRR: parseValue(rows[11]?.[summaryCol]) || parseValue(rows[11]?.[1]),
+                    directConversions: parseValue(rows[12]?.[summaryCol]) || parseValue(rows[12]?.[1]),
+                    directConversionsMRR: parseValue(rows[13]?.[summaryCol]) || parseValue(rows[13]?.[1]),
+                    directConversionsDealPoints: parseValue(rows[14]?.[summaryCol]) || parseValue(rows[14]?.[1])
+                };
+
+                // Weekly data - Misc Pod uses columns B, D, F, H (indices 1, 3, 5, 7)
+                const weekCols = [1, 3, 5, 7]; // Week 1, 2, 3, 4
+                const weeks = WEEKS.map((week, idx) => {
+                    const col = weekCols[idx];
+                    return {
+                        label: week,
+                        dates: WEEK_DATES[week],
+                        spend: parseValue(rows[1]?.[col]),
+                        accounts: parseValue(rows[2]?.[col]),
+                        demos: parseValue(rows[3]?.[col]),
+                        deals: parseValue(rows[4]?.[col]),
+                        dealPoints: parseValue(rows[5]?.[col]),
+                        generatedMRR: parseValue(rows[10]?.[col]),
+                        closedMRR: parseValue(rows[11]?.[col]),
+                        directConversions: parseValue(rows[12]?.[col]),
+                        directConversionsMRR: parseValue(rows[13]?.[col]),
+                        directConversionsDealPoints: parseValue(rows[14]?.[col])
+                    };
+                });
+
+                // Misc Pod channels: Not set, Direct, Marketing email id
+                const channels = [];
+                const miscChannels = ['Not set', 'Direct', 'Marketing email id'];
+                const miscIcons = ['notset', 'direct', 'email'];
+                const miscShorts = ['N', 'D', 'M'];
+                
+                // Channels start at row 18 (index 17), each channel 3 columns apart
+                miscChannels.forEach((name, idx) => {
+                    const colOffset = idx * 3 + 3; // D, G, J (3, 6, 9)
+                    channels.push({
+                        name,
+                        icon: miscIcons[idx],
+                        short: miscShorts[idx],
+                        spend: parseValue(rows[18]?.[colOffset]),
+                        accounts: parseValue(rows[19]?.[colOffset]),
+                        demos: parseValue(rows[20]?.[colOffset]),
+                        deals: parseValue(rows[21]?.[colOffset]),
+                        dealPoints: parseValue(rows[22]?.[colOffset]),
+                        generatedMRR: parseValue(rows[27]?.[colOffset]),
+                        closedMRR: parseValue(rows[28]?.[colOffset]),
+                        directConversions: parseValue(rows[29]?.[colOffset]),
+                        directConversionsMRR: parseValue(rows[30]?.[colOffset]),
+                        directConversionsDealPoints: parseValue(rows[31]?.[colOffset]),
+                        cpc: 0, clicks: 0, impressions: 0, ctr: 0
+                    });
+                });
+
+                // Calculate totals from channels if summary is 0
+                if (summary.spend === 0) {
+                    summary.spend = channels.reduce((sum, ch) => sum + ch.spend, 0);
+                    summary.accounts = channels.reduce((sum, ch) => sum + ch.accounts, 0);
+                    summary.demos = channels.reduce((sum, ch) => sum + ch.demos, 0);
+                    summary.deals = channels.reduce((sum, ch) => sum + ch.deals, 0);
+                    summary.dealPoints = channels.reduce((sum, ch) => sum + ch.dealPoints, 0);
+                    summary.generatedMRR = channels.reduce((sum, ch) => sum + ch.generatedMRR, 0);
+                    summary.closedMRR = channels.reduce((sum, ch) => sum + ch.closedMRR, 0);
+                    summary.directConversions = channels.reduce((sum, ch) => sum + ch.directConversions, 0);
+                    summary.directConversionsMRR = channels.reduce((sum, ch) => sum + ch.directConversionsMRR, 0);
+                    summary.directConversionsDealPoints = channels.reduce((sum, ch) => sum + ch.directConversionsDealPoints, 0);
+                }
+
+                return { summary, weeks, channels, month };
+            };
+
             // Process Brand Advocacy sheet data (same structure as Conversion Pod)
             const processBrandAdvocacyData = (rows, month) => {
                 if (!rows || rows.length === 0) return getEmptyData(month);
@@ -2356,6 +2444,8 @@ Be direct and specific. No fluff.`;
                         return processAwarenessData(result.values, month);
                     } else if (podKey === 'outbound') {
                         return processOutboundData(result.values, month);
+                    } else if (podKey === 'misc') {
+                        return processMiscPodData(result.values, month);
                     }
                     return processSheetData(result.values, month);
                 } catch (err) {
@@ -2399,11 +2489,11 @@ Be direct and specific. No fluff.`;
                     const awarenessResult = awarenessResp.ok ? await awarenessResp.json() : { values: [] };
                     const miscResult = miscResp.ok ? await miscResp.json() : { values: [] };
 
-                    // Process each pod's data (Misc Pod uses same structure as Conversion Pod)
+                    // Process each pod's data
                     const conversionData = processSheetData(conversionResult.values || [], month);
                     const brandData = processBrandAdvocacyData(brandResult.values || [], month);
                     const awarenessData = processAwarenessData(awarenessResult.values || [], month);
-                    const miscData = processSheetData(miscResult.values || [], month);
+                    const miscData = processMiscPodData(miscResult.values || [], month);
 
                     // Combine into leadership data with pod breakdown
                     const allChannels = [
