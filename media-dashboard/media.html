@@ -1298,28 +1298,27 @@
                 return { summary, weeks, channels, month };
             };
 
-            // Process Brand Advocacy sheet data (different structure)
+            // Process Brand Advocacy sheet data (same structure as Conversion Pod)
             const processBrandAdvocacyData = (rows, month) => {
                 if (!rows || rows.length === 0) return getEmptyData(month);
 
-                // Brand Advocacy structure: MTD totals in column O (index 14)
-                const summaryCol = 14;
+                // Summary data from Column B (index 1) - same as Conversion Pod
                 const summary = {
-                    spend: parseValue(rows[1]?.[summaryCol]),
-                    accounts: parseValue(rows[2]?.[summaryCol]),
-                    demos: parseValue(rows[3]?.[summaryCol]),
-                    deals: parseValue(rows[4]?.[summaryCol]),
-                    dealPoints: parseValue(rows[5]?.[summaryCol]),
-                    generatedMRR: parseValue(rows[10]?.[summaryCol]),
-                    closedMRR: parseValue(rows[11]?.[summaryCol]),
-                    directConversions: parseValue(rows[12]?.[summaryCol]),
-                    directConversionsMRR: parseValue(rows[13]?.[summaryCol]),
-                    directConversionsDealPoints: parseValue(rows[14]?.[summaryCol])
+                    spend: parseValue(rows[1]?.[1]),
+                    accounts: parseValue(rows[2]?.[1]),
+                    demos: parseValue(rows[3]?.[1]),
+                    deals: parseValue(rows[4]?.[1]),
+                    dealPoints: parseValue(rows[5]?.[1]),
+                    generatedMRR: parseValue(rows[10]?.[1]),
+                    closedMRR: parseValue(rows[11]?.[1]),
+                    directConversions: parseValue(rows[12]?.[1]),
+                    directConversionsMRR: parseValue(rows[13]?.[1]),
+                    directConversionsDealPoints: parseValue(rows[14]?.[1])
                 };
 
-                // Weekly data at indices 2, 5, 8, 11
+                // Weekly data from columns D, G, J, M (indices 3, 6, 9, 12)
                 const weeks = WEEKS.map((week, idx) => {
-                    const colOffset = idx * 3 + 2; // Week 1=2, Week 2=5, Week 3=8, Week 4=11
+                    const colOffset = idx * 3 + 3; // Week 1=3, Week 2=6, Week 3=9, Week 4=12
                     return {
                         label: week,
                         dates: WEEK_DATES[week],
@@ -1343,7 +1342,7 @@
                 const brandShorts = ['S', 'BC', 'D'];
                 
                 brandChannels.forEach((name, idx) => {
-                    const colOffset = idx * 3 + 2;
+                    const colOffset = idx * 3 + 3; // D, G, J (3, 6, 9) - same as Conversion Pod
                     channels.push({
                         name,
                         icon: brandIcons[idx],
@@ -1365,28 +1364,27 @@
                 return { summary, weeks, channels, month };
             };
 
-            // Process Awareness Pod sheet data (same structure as Brand Advocacy)
+            // Process Awareness Pod sheet data (same structure as Conversion Pod)
             const processAwarenessData = (rows, month) => {
                 if (!rows || rows.length === 0) return getEmptyData(month);
 
-                // Same structure as Brand Advocacy: MTD totals in column O (index 14)
-                const summaryCol = 14;
+                // Summary data from Column B (index 1) - same as Conversion Pod
                 const summary = {
-                    spend: parseValue(rows[1]?.[summaryCol]),
-                    accounts: parseValue(rows[2]?.[summaryCol]),
-                    demos: parseValue(rows[3]?.[summaryCol]),
-                    deals: parseValue(rows[4]?.[summaryCol]),
-                    dealPoints: parseValue(rows[5]?.[summaryCol]),
-                    generatedMRR: parseValue(rows[10]?.[summaryCol]),
-                    closedMRR: parseValue(rows[11]?.[summaryCol]),
-                    directConversions: parseValue(rows[12]?.[summaryCol]),
-                    directConversionsMRR: parseValue(rows[13]?.[summaryCol]),
-                    directConversionsDealPoints: parseValue(rows[14]?.[summaryCol])
+                    spend: parseValue(rows[1]?.[1]),
+                    accounts: parseValue(rows[2]?.[1]),
+                    demos: parseValue(rows[3]?.[1]),
+                    deals: parseValue(rows[4]?.[1]),
+                    dealPoints: parseValue(rows[5]?.[1]),
+                    generatedMRR: parseValue(rows[10]?.[1]),
+                    closedMRR: parseValue(rows[11]?.[1]),
+                    directConversions: parseValue(rows[12]?.[1]),
+                    directConversionsMRR: parseValue(rows[13]?.[1]),
+                    directConversionsDealPoints: parseValue(rows[14]?.[1])
                 };
 
-                // Weekly data at indices 2, 5, 8, 11
+                // Weekly data from columns D, G, J, M (indices 3, 6, 9, 12)
                 const weeks = WEEKS.map((week, idx) => {
-                    const colOffset = idx * 3 + 2;
+                    const colOffset = idx * 3 + 3; // Week 1=3, Week 2=6, Week 3=9, Week 4=12
                     return {
                         label: week,
                         dates: WEEK_DATES[week],
@@ -1410,7 +1408,7 @@
                 const awarenessShorts = ['YT', 'RC', 'S', 'EA', 'IM'];
                 
                 awarenessChannels.forEach((name, idx) => {
-                    const colOffset = idx * 3 + 2;
+                    const colOffset = idx * 3 + 3; // D, G, J, M, P (3, 6, 9, 12, 15) - same as Conversion Pod
                     channels.push({
                         name,
                         icon: awarenessIcons[idx],
