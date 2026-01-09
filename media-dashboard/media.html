@@ -2419,6 +2419,13 @@ Be direct and specific. No fluff.`;
             const monthAvailabilityCache = {};
             const dataCache = {};
             
+            // Function to clear all caches (useful when data has been updated)
+            const clearAllCaches = () => {
+                Object.keys(monthAvailabilityCache).forEach(key => delete monthAvailabilityCache[key]);
+                Object.keys(dataCache).forEach(key => delete dataCache[key]);
+                console.log('All caches cleared');
+            };
+            
             const fetchMonthData = async (month, spreadsheetId, podKey, skipCache = false) => {
                 // Check cache first
                 const cacheKey = `${spreadsheetId}_${month}_${podKey}`;
@@ -3166,7 +3173,13 @@ Be direct and specific. No fluff.`;
                         <div className="topbar">
                             <div className="page-title">{PODS.find(p => p.key === selectedPod)?.label}</div>
                             <div className="topbar-right">
-                                <button className={`btn-icon ${refreshing ? 'spinning' : ''}`} onClick={() => fetchAllData(selectedPod)} disabled={refreshing} title="Refresh data">
+                                <button 
+                                    className={`btn-icon ${refreshing ? 'spinning' : ''}`} 
+                                    onClick={() => fetchAllData(selectedPod)} 
+                                    onDoubleClick={() => { clearAllCaches(); showToast('Cache cleared - refreshing...'); fetchAllData(selectedPod); }}
+                                    disabled={refreshing} 
+                                    title="Click to refresh (uses cache) | Double-click to clear cache and refresh"
+                                >
                                     {Icons.refresh}
                                 </button>
                             </div>
