@@ -3003,9 +3003,18 @@ Be direct and specific. No fluff.`;
                 const metricConfig = CHART_METRICS.find(m => m.key === chartMetric) || CHART_METRICS[0];
                 const isCurrency = metricConfig.format === 'currency';
 
-                // Bar chart for channel performance (dynamic metric)
+                // Bar chart for channel performance (dynamic metric) - shows ALL channels from ALL pods
                 const trendCtx = trendChartRef.current.getContext('2d');
-                const topChannels = [...currentData.channels].sort((a, b) => (b[chartMetric] || 0) - (a[chartMetric] || 0)).slice(0, 8);
+                // Show top 12 channels sorted by selected metric
+                const topChannels = [...currentData.channels].sort((a, b) => (b[chartMetric] || 0) - (a[chartMetric] || 0)).slice(0, 12);
+                
+                // Color based on pod for better visual distinction
+                const podColors = {
+                    'Conversion': '#10b981',
+                    'Brand Advocacy': '#ec4899',
+                    'Awareness': '#f59e0b',
+                    'Misc': '#64748b'
+                };
                 
                 trendChartInstance.current = new Chart(trendCtx, {
                     type: 'bar',
@@ -3014,7 +3023,7 @@ Be direct and specific. No fluff.`;
                         datasets: [{
                             label: metricConfig.label,
                             data: topChannels.map(c => c[chartMetric] || 0),
-                            backgroundColor: '#2563eb',
+                            backgroundColor: topChannels.map(c => podColors[c.pod] || '#2563eb'),
                             borderRadius: 4
                         }]
                     },
@@ -3411,7 +3420,7 @@ Be direct and specific. No fluff.`;
                             <div className="charts-grid">
                                 <div className="chart-card">
                                     <div className="chart-header">
-                                        <div className="chart-title">Monthly Performance by Pod</div>
+                                        <div className="chart-title">Monthly Performance by Channels</div>
                                         <div className="chart-controls">
                                             <select className="chart-metric-select" value={chartMetric} onChange={(e) => setChartMetric(e.target.value)}>
                                                 {CHART_METRICS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
