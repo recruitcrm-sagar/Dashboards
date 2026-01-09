@@ -186,7 +186,7 @@
         .pod-icon.awareness { background: #fef3c7; color: #d97706; }
         .pod-icon.brand { background: #fce7f3; color: #db2777; }
         .pod-icon.conversion { background: #d1fae5; color: #059669; }
-        .pod-icon.untracked { background: #e2e8f0; color: #64748b; }
+        .pod-icon.misc { background: #e2e8f0; color: #64748b; }
         .pod-icon.leadership { background: #fef3c7; color: #b45309; }
         .pod-icon.outbound { background: #e0e7ff; color: #4f46e5; }
         .pod-icon.insights { background: #fef9c3; color: #ca8a04; }
@@ -468,7 +468,7 @@
         .pod-badge.awareness { background: #fef3c7; color: #d97706; }
         .pod-badge.brand { background: #fce7f3; color: #db2777; }
         .pod-badge.conversion { background: #d1fae5; color: #059669; }
-        .pod-badge.untracked { background: #e2e8f0; color: #64748b; }
+        .pod-badge.misc { background: #e2e8f0; color: #64748b; }
 
         .pod-totals-grid {
             display: grid;
@@ -502,7 +502,7 @@
         .pod-total-card.awareness { border-left: 4px solid #d97706; }
         .pod-total-card.brand { border-left: 4px solid #db2777; }
         .pod-total-card.conversion { border-left: 4px solid #059669; }
-        .pod-total-card.untracked { border-left: 4px solid #64748b; }
+        .pod-total-card.misc { border-left: 4px solid #64748b; }
 
         .pod-total-header {
             display: flex;
@@ -523,7 +523,7 @@
         .pod-total-icon.awareness { background: #fef3c7; color: #d97706; }
         .pod-total-icon.brand { background: #fce7f3; color: #db2777; }
         .pod-total-icon.conversion { background: #d1fae5; color: #059669; }
-        .pod-total-icon.untracked { background: #e2e8f0; color: #64748b; }
+        .pod-total-icon.misc { background: #e2e8f0; color: #64748b; }
 
         .pod-total-name {
             font-size: 14px;
@@ -887,7 +887,7 @@
         .channel-icon.awareness { background: #f59e0b; }
         .channel-icon.brand { background: #ec4899; }
         .channel-icon.conversion { background: #10b981; }
-        .channel-icon.untracked { background: #64748b; }
+        .channel-icon.misc { background: #64748b; }
 
         /* Outbound channel icons */
         .channel-icon.colddata { background: #3b82f6; }
@@ -1379,7 +1379,7 @@
             { key: 'awareness', label: 'Awareness Pod', icon: 'eye', iconClass: 'awareness' },
             { key: 'brand', label: 'Brand Advocacy Pod', icon: 'heart', iconClass: 'brand' },
             { key: 'conversion', label: 'Conversion Pod', icon: 'zap', iconClass: 'conversion' },
-            { key: 'untracked', label: 'Misc Pod', icon: 'help', iconClass: 'untracked' },
+            { key: 'misc', label: 'Misc Pod', icon: 'help', iconClass: 'misc' },
             { key: 'outbound', label: 'Outbound', icon: 'send', iconClass: 'outbound' },
             { key: 'insights', label: 'Insights', icon: 'lightbulb', iconClass: 'insights' }
         ];
@@ -2036,7 +2036,7 @@ Be direct and specific. No fluff.`;
                     },
                     {
                         name: 'Misc Pod',
-                        icon: 'untracked',
+                        icon: 'misc',
                         short: 'UT',
                         spend: parseValue(rows[1]?.[10]),
                         accounts: parseValue(rows[2]?.[10]),
@@ -2146,7 +2146,7 @@ Be direct and specific. No fluff.`;
                     },
                     {
                         name: 'Misc Pod (Total)',
-                        icon: 'untracked',
+                        icon: 'misc',
                         short: 'UT',
                         pod: 'Untracked',
                         spend: parseValue(allPodsRows[1]?.[10]),
