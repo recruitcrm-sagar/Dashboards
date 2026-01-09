@@ -2415,7 +2415,17 @@ Be direct and specific. No fluff.`;
                 month
             });
 
-            const fetchMonthData = async (month, spreadsheetId, podKey) => {
+            // Cache for month availability and data - improves load times significantly
+            const monthAvailabilityCache = {};
+            const dataCache = {};
+            
+            const fetchMonthData = async (month, spreadsheetId, podKey, skipCache = false) => {
+                // Check cache first
+                const cacheKey = `${spreadsheetId}_${month}_${podKey}`;
+                if (!skipCache && dataCache[cacheKey]) {
+                    return dataCache[cacheKey];
+                }
+                
                 try {
                     // Determine the correct range/tab name based on pod
                     let range;
@@ -2435,19 +2445,26 @@ Be direct and specific. No fluff.`;
                     }
                     
                     const result = await response.json();
+                    let processedData;
+                    
                     // Use appropriate parser based on pod
                     if (podKey === 'all') {
-                        return processAllPodsData(result.values, month);
+                        processedData = processAllPodsData(result.values, month);
                     } else if (podKey === 'brand') {
-                        return processBrandAdvocacyData(result.values, month);
+                        processedData = processBrandAdvocacyData(result.values, month);
                     } else if (podKey === 'awareness') {
-                        return processAwarenessData(result.values, month);
+                        processedData = processAwarenessData(result.values, month);
                     } else if (podKey === 'outbound') {
-                        return processOutboundData(result.values, month);
+                        processedData = processOutboundData(result.values, month);
                     } else if (podKey === 'misc') {
-                        return processMiscPodData(result.values, month);
+                        processedData = processMiscPodData(result.values, month);
+                    } else {
+                        processedData = processSheetData(result.values, month);
                     }
-                    return processSheetData(result.values, month);
+                    
+                    // Cache the result
+                    dataCache[cacheKey] = processedData;
+                    return processedData;
                 } catch (err) {
                     console.error(`Error fetching ${month}:`, err);
                     return null;
@@ -2455,17 +2472,31 @@ Be direct and specific. No fluff.`;
             };
 
             const checkAvailableMonths = async (spreadsheetId, podKey) => {
-                const available = [];
-                for (const month of MONTHS) {
+                // Check cache first
+                const cacheKey = `${spreadsheetId}_months`;
+                if (monthAvailabilityCache[cacheKey]) {
+                    return monthAvailabilityCache[cacheKey];
+                }
+                
+                // Check all months in PARALLEL instead of sequentially
+                const checkPromises = MONTHS.map(async (month) => {
                     try {
-                        // All pods use simple month names like "January"
                         const tabName = month.key;
                         const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabName)}!A1:A1?key=${API_KEY}`;
                         const response = await fetch(url);
-                        if (response.ok) available.push(month.key);
-                    } catch (err) { /* Month doesn't exist */ }
-                }
-                return available.length > 0 ? available : ['January'];
+                        return response.ok ? month.key : null;
+                    } catch (err) { 
+                        return null;
+                    }
+                });
+                
+                const results = await Promise.all(checkPromises);
+                const available = results.filter(m => m !== null);
+                const finalResult = available.length > 0 ? available : ['January'];
+                
+                // Cache the result
+                monthAvailabilityCache[cacheKey] = finalResult;
+                return finalResult;
             };
 
             // Fetch Leadership data from all pods for a specific month
@@ -2741,76 +2772,43 @@ Be direct and specific. No fluff.`;
             const fetchAllData = async (podKey = selectedPod) => {
                 const spreadsheetId = POD_SPREADSHEETS[podKey];
                 
-                // Special handling for Insights - fetch from ALL pods
+                // Special handling for Insights - fetch from ALL pods IN PARALLEL
                 if (podKey === 'insights') {
                 setRefreshing(true);
                 try {
                         const insightsData = {};
                         
-                        // Fetch Conversion Pod data
-                        const conversionSpreadsheet = POD_SPREADSHEETS['conversion'];
-                        if (conversionSpreadsheet) {
-                            const conversionMonths = await checkAvailableMonths(conversionSpreadsheet, 'conversion');
-                            const conversionData = {};
-                            for (const month of conversionMonths) {
-                                const monthData = await fetchMonthData(month, conversionSpreadsheet, 'conversion');
-                                if (monthData) conversionData[month] = monthData;
-                            }
-                            conversionData['Overview'] = aggregateMonthsData(conversionData);
-                            insightsData['conversion'] = conversionData;
-                        }
+                        // Helper function to fetch all months for a pod in parallel
+                        const fetchPodDataParallel = async (spreadsheetId, podKey) => {
+                            if (!spreadsheetId) return null;
+                            const months = await checkAvailableMonths(spreadsheetId, podKey);
+                            // Fetch all months in PARALLEL
+                            const monthPromises = months.map(month => 
+                                fetchMonthData(month, spreadsheetId, podKey).then(data => ({ month, data }))
+                            );
+                            const results = await Promise.all(monthPromises);
+                            const podData = {};
+                            results.forEach(({ month, data }) => {
+                                if (data) podData[month] = data;
+                            });
+                            podData['Overview'] = aggregateMonthsData(podData);
+                            return podData;
+                        };
                         
-                        // Fetch Brand Advocacy Pod data
-                        const brandSpreadsheet = POD_SPREADSHEETS['brand'];
-                        if (brandSpreadsheet) {
-                            const brandMonths = await checkAvailableMonths(brandSpreadsheet, 'brand');
-                            const brandData = {};
-                            for (const month of brandMonths) {
-                                const monthData = await fetchMonthData(month, brandSpreadsheet, 'brand');
-                                if (monthData) brandData[month] = monthData;
-                            }
-                            brandData['Overview'] = aggregateMonthsData(brandData);
-                            insightsData['brand'] = brandData;
-                        }
+                        // Fetch ALL pods in PARALLEL
+                        const [conversionData, brandData, awarenessData, miscData, outboundData] = await Promise.all([
+                            fetchPodDataParallel(POD_SPREADSHEETS['conversion'], 'conversion'),
+                            fetchPodDataParallel(POD_SPREADSHEETS['brand'], 'brand'),
+                            fetchPodDataParallel(POD_SPREADSHEETS['awareness'], 'awareness'),
+                            fetchPodDataParallel(POD_SPREADSHEETS['misc'], 'misc'),
+                            fetchPodDataParallel(POD_SPREADSHEETS['outbound'], 'outbound')
+                        ]);
                         
-                        // Fetch Awareness Pod data
-                        const awarenessSpreadsheet = POD_SPREADSHEETS['awareness'];
-                        if (awarenessSpreadsheet) {
-                            const awarenessMonths = await checkAvailableMonths(awarenessSpreadsheet, 'awareness');
-                            const awarenessData = {};
-                            for (const month of awarenessMonths) {
-                                const monthData = await fetchMonthData(month, awarenessSpreadsheet, 'awareness');
-                                if (monthData) awarenessData[month] = monthData;
-                            }
-                            awarenessData['Overview'] = aggregateMonthsData(awarenessData);
-                            insightsData['awareness'] = awarenessData;
-                        }
-                        
-                        // Fetch Misc Pod data
-                        const miscSpreadsheet = POD_SPREADSHEETS['misc'];
-                        if (miscSpreadsheet) {
-                            const miscMonths = await checkAvailableMonths(miscSpreadsheet, 'misc');
-                            const miscData = {};
-                            for (const month of miscMonths) {
-                                const monthData = await fetchMonthData(month, miscSpreadsheet, 'misc');
-                                if (monthData) miscData[month] = monthData;
-                            }
-                            miscData['Overview'] = aggregateMonthsData(miscData);
-                            insightsData['misc'] = miscData;
-                        }
-                        
-                        // Fetch Outbound Pod data
-                        const outboundSpreadsheet = POD_SPREADSHEETS['outbound'];
-                        if (outboundSpreadsheet) {
-                            const outboundMonths = await checkAvailableMonths(outboundSpreadsheet, 'outbound');
-                            const outboundData = {};
-                            for (const month of outboundMonths) {
-                                const monthData = await fetchMonthData(month, outboundSpreadsheet, 'outbound');
-                                if (monthData) outboundData[month] = monthData;
-                            }
-                            outboundData['Overview'] = aggregateMonthsData(outboundData);
-                            insightsData['outbound'] = outboundData;
-                        }
+                        if (conversionData) insightsData['conversion'] = conversionData;
+                        if (brandData) insightsData['brand'] = brandData;
+                        if (awarenessData) insightsData['awareness'] = awarenessData;
+                        if (miscData) insightsData['misc'] = miscData;
+                        if (outboundData) insightsData['outbound'] = outboundData;
                         
                         setAllPodsData(insightsData);
                         setData({});
@@ -2848,11 +2846,16 @@ Be direct and specific. No fluff.`;
                         const available = await checkAvailableMonths(POD_SPREADSHEETS.conversion, 'conversion');
                     setAvailableMonths(available);
 
+                    // Fetch all months in PARALLEL for faster loading
+                    const monthPromises = available.map(month => 
+                        fetchLeadershipMonthData(month).then(data => ({ month, data }))
+                    );
+                    const results = await Promise.all(monthPromises);
+
                     const allData = {};
-                    for (const month of available) {
-                            const monthData = await fetchLeadershipMonthData(month);
-                        if (monthData) allData[month] = monthData;
-                    }
+                    results.forEach(({ month, data }) => {
+                        if (data) allData[month] = data;
+                    });
 
                     if (Object.keys(allData).length === 0) {
                         allData['January'] = getEmptyData('January');
@@ -2876,11 +2879,16 @@ Be direct and specific. No fluff.`;
                         const available = await checkAvailableMonths(spreadsheetId, podKey);
                     setAvailableMonths(available);
 
+                    // Fetch all months in PARALLEL for faster loading
+                    const monthPromises = available.map(month => 
+                        fetchMonthData(month, spreadsheetId, podKey).then(data => ({ month, data }))
+                    );
+                    const results = await Promise.all(monthPromises);
+                    
                     const allData = {};
-                    for (const month of available) {
-                            const monthData = await fetchMonthData(month, spreadsheetId, podKey);
-                        if (monthData) allData[month] = monthData;
-                    }
+                    results.forEach(({ month, data }) => {
+                        if (data) allData[month] = data;
+                    });
 
                     if (Object.keys(allData).length === 0) {
                         allData['January'] = getEmptyData('January');
