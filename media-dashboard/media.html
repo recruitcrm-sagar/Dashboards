@@ -1261,7 +1261,8 @@
             awareness: '1u0gIrFqEiPtsmaKF9BedN3r8eV_3JWe-2h364tdIeRk',
             all: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs',
             leadership: '1W8ycV7bmJJt_jtCVOXU_VUH-pK4OIeOaFXhWZFSdFWs', // Uses same overview sheet
-            outbound: '1bRp9hnQdOnppaoK6WsPdzYj2XeedO1G5TQ4iqJcIWlQ' // Independent outbound sheet
+            outbound: '1bRp9hnQdOnppaoK6WsPdzYj2XeedO1G5TQ4iqJcIWlQ', // Independent outbound sheet
+            untracked: '1X6LTS4QeQSSWMHNyDwEV4PbRORC2zWtyx0OjlXLjKFY' // Misc Pod spreadsheet
         };
         // ============================================
 
@@ -2384,27 +2385,32 @@ Be direct and specific. No fluff.`;
                     const conversionUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.conversion}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
                     const brandUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.brand}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
                     const awarenessUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.awareness}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
+                    const miscUrl = `https://sheets.googleapis.com/v4/spreadsheets/${POD_SPREADSHEETS.untracked}/values/${encodeURIComponent(month)}!A1:AZ100?key=${API_KEY}`;
 
-                    const [conversionResp, brandResp, awarenessResp] = await Promise.all([
+                    const [conversionResp, brandResp, awarenessResp, miscResp] = await Promise.all([
                         fetch(conversionUrl),
                         fetch(brandUrl),
-                        fetch(awarenessUrl)
+                        fetch(awarenessUrl),
+                        fetch(miscUrl)
                     ]);
 
                     const conversionResult = conversionResp.ok ? await conversionResp.json() : { values: [] };
                     const brandResult = brandResp.ok ? await brandResp.json() : { values: [] };
                     const awarenessResult = awarenessResp.ok ? await awarenessResp.json() : { values: [] };
+                    const miscResult = miscResp.ok ? await miscResp.json() : { values: [] };
 
                     // Process each pod's data
                     const conversionData = processSheetData(conversionResult.values || [], month);
                     const brandData = processBrandAdvocacyData(brandResult.values || [], month);
                     const awarenessData = processAwarenessData(awarenessResult.values || [], month);
+                    const miscData = processSheetData(miscResult.values || [], month);
 
                     // Combine into leadership data with pod breakdown
                     const allChannels = [
                         ...conversionData.channels.map(ch => ({ ...ch, pod: 'Conversion', podIcon: 'conversion' })),
                         ...brandData.channels.map(ch => ({ ...ch, pod: 'Brand Advocacy', podIcon: 'brand' })),
-                        ...awarenessData.channels.map(ch => ({ ...ch, pod: 'Awareness', podIcon: 'awareness' }))
+                        ...awarenessData.channels.map(ch => ({ ...ch, pod: 'Awareness', podIcon: 'awareness' })),
+                        ...miscData.channels.map(ch => ({ ...ch, pod: 'Misc', podIcon: 'misc' }))
                     ];
 
                     // Create pod totals
@@ -2427,21 +2433,21 @@ Be direct and specific. No fluff.`;
                         createPodTotal(awarenessData, 'Awareness Pod', 'awareness'),
                         createPodTotal(brandData, 'Brand Advocacy Pod', 'brand'),
                         createPodTotal(conversionData, 'Conversion Pod', 'conversion'),
-                        createPodTotal({ summary: { accounts: 0, demos: 0, deals: 0, dealPoints: 0 } }, 'Misc Pod', 'misc')
+                        createPodTotal(miscData, 'Misc Pod', 'misc')
                     ];
 
-                    // Aggregate summary
+                    // Aggregate summary (including Misc Pod)
                     const summary = {
-                        spend: (conversionData.summary?.spend || 0) + (brandData.summary?.spend || 0) + (awarenessData.summary?.spend || 0),
-                        accounts: (conversionData.summary?.accounts || 0) + (brandData.summary?.accounts || 0) + (awarenessData.summary?.accounts || 0),
-                        demos: (conversionData.summary?.demos || 0) + (brandData.summary?.demos || 0) + (awarenessData.summary?.demos || 0),
-                        deals: (conversionData.summary?.deals || 0) + (brandData.summary?.deals || 0) + (awarenessData.summary?.deals || 0),
-                        dealPoints: (conversionData.summary?.dealPoints || 0) + (brandData.summary?.dealPoints || 0) + (awarenessData.summary?.dealPoints || 0),
-                        generatedMRR: (conversionData.summary?.generatedMRR || 0) + (brandData.summary?.generatedMRR || 0) + (awarenessData.summary?.generatedMRR || 0),
-                        closedMRR: (conversionData.summary?.closedMRR || 0) + (brandData.summary?.closedMRR || 0) + (awarenessData.summary?.closedMRR || 0),
-                        directConversions: (conversionData.summary?.directConversions || 0) + (brandData.summary?.directConversions || 0) + (awarenessData.summary?.directConversions || 0),
-                        directConversionsMRR: (conversionData.summary?.directConversionsMRR || 0) + (brandData.summary?.directConversionsMRR || 0) + (awarenessData.summary?.directConversionsMRR || 0),
-                        directConversionsDealPoints: (conversionData.summary?.directConversionsDealPoints || 0) + (brandData.summary?.directConversionsDealPoints || 0) + (awarenessData.summary?.directConversionsDealPoints || 0)
+                        spend: (conversionData.summary?.spend || 0) + (brandData.summary?.spend || 0) + (awarenessData.summary?.spend || 0) + (miscData.summary?.spend || 0),
+                        accounts: (conversionData.summary?.accounts || 0) + (brandData.summary?.accounts || 0) + (awarenessData.summary?.accounts || 0) + (miscData.summary?.accounts || 0),
+                        demos: (conversionData.summary?.demos || 0) + (brandData.summary?.demos || 0) + (awarenessData.summary?.demos || 0) + (miscData.summary?.demos || 0),
+                        deals: (conversionData.summary?.deals || 0) + (brandData.summary?.deals || 0) + (awarenessData.summary?.deals || 0) + (miscData.summary?.deals || 0),
+                        dealPoints: (conversionData.summary?.dealPoints || 0) + (brandData.summary?.dealPoints || 0) + (awarenessData.summary?.dealPoints || 0) + (miscData.summary?.dealPoints || 0),
+                        generatedMRR: (conversionData.summary?.generatedMRR || 0) + (brandData.summary?.generatedMRR || 0) + (awarenessData.summary?.generatedMRR || 0) + (miscData.summary?.generatedMRR || 0),
+                        closedMRR: (conversionData.summary?.closedMRR || 0) + (brandData.summary?.closedMRR || 0) + (awarenessData.summary?.closedMRR || 0) + (miscData.summary?.closedMRR || 0),
+                        directConversions: (conversionData.summary?.directConversions || 0) + (brandData.summary?.directConversions || 0) + (awarenessData.summary?.directConversions || 0) + (miscData.summary?.directConversions || 0),
+                        directConversionsMRR: (conversionData.summary?.directConversionsMRR || 0) + (brandData.summary?.directConversionsMRR || 0) + (awarenessData.summary?.directConversionsMRR || 0) + (miscData.summary?.directConversionsMRR || 0),
+                        directConversionsDealPoints: (conversionData.summary?.directConversionsDealPoints || 0) + (brandData.summary?.directConversionsDealPoints || 0) + (awarenessData.summary?.directConversionsDealPoints || 0) + (miscData.summary?.directConversionsDealPoints || 0)
                     };
 
                     // Combine weeks from all pods
