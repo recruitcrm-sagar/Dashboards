@@ -3828,15 +3828,19 @@ Be direct and specific. No fluff.`;
                                 const totalAccounts = conversionData.summary?.accounts || 0;
                                 const totalDemos = conversionData.summary?.demos || 0;
                                 const totalDeals = conversionData.summary?.deals || 0;
+                                const directConversions = conversionData.summary?.directConversions || 0;
+                                const generatedMRR = conversionData.summary?.generatedMRR || 0;
+                                const closedMRR = conversionData.summary?.closedMRR || 0;
                                 const costPerDemo = totalSpend > 0 && totalDemos > 0 ? totalSpend / totalDemos : 0;
                                 const costPerDeal = totalSpend > 0 && totalDeals > 0 ? totalSpend / totalDeals : 0;
-                                const demoToAccountRate = totalAccounts > 0 && totalDemos > 0 ? (totalDemos / totalAccounts * 100) : 0;
-                                const dealToDemoRate = totalDemos > 0 && totalDeals > 0 ? (totalDeals / totalDemos * 100) : 0;
+                                const demoToDealRate = totalDemos > 0 && totalDeals > 0 ? (totalDeals / totalDemos * 100) : 0;
+                                const dealToCustomerRate = totalDeals > 0 && directConversions > 0 ? (directConversions / totalDeals * 100) : 0;
                                 
                                 // Outbound data
                                 const outboundDemos = outboundData.teamTotals?.totalDemos || 0;
                                 const outboundDeals = outboundData.teamTotals?.totalDeals || 0;
                                 const outboundPipeline = outboundData.teamTotals?.mrrPipeline || 0;
+                                const outboundClosedMRR = outboundData.teamTotals?.closedMRR || 0;
                                 const salesloftCalls = outboundData.teamTotals?.salesloftCalls || 0;
                                 const aiCalls = outboundData.teamTotals?.aiCalls || 0;
                                 
@@ -3852,27 +3856,51 @@ Be direct and specific. No fluff.`;
                                 
                                 return (
                                     <>
-                                    {/* Key Metrics Summary */}
+                                    {/* Key Metrics Summary - Row 1 */}
                                     <div className="performance-highlights">
                                         <div className="highlight-card">
-                                            <div className="highlight-label">Total Ad Spend</div>
+                                            <div className="highlight-label">Total Spend</div>
                                             <div className="highlight-value">{formatCurrency(totalSpend)}</div>
-                                            <div className="highlight-change positive">Conversion Pod</div>
+                                            <div className="highlight-change positive">All Channels</div>
                                         </div>
                                         <div className="highlight-card">
-                                            <div className="highlight-label">Demo Conversion Rate</div>
-                                            <div className="highlight-value">{demoToAccountRate.toFixed(1)}%</div>
-                                            <div className="highlight-change">Account → Demo</div>
+                                            <div className="highlight-label">Demo to Deal</div>
+                                            <div className="highlight-value">{demoToDealRate.toFixed(1)}%</div>
+                                            <div className="highlight-change">Conversion Rate</div>
                                         </div>
                                         <div className="highlight-card">
-                                            <div className="highlight-label">Deal Close Rate</div>
-                                            <div className="highlight-value">{dealToDemoRate.toFixed(1)}%</div>
-                                            <div className="highlight-change">Demo → Deal</div>
+                                            <div className="highlight-label">Deal to Customer</div>
+                                            <div className="highlight-value">{dealToCustomerRate.toFixed(1)}%</div>
+                                            <div className="highlight-change">Conversion Rate</div>
                                         </div>
                                         <div className="highlight-card">
-                                            <div className="highlight-label">Outbound Pipeline</div>
-                                            <div className="highlight-value">{formatCurrency(outboundPipeline)}</div>
-                                            <div className="highlight-change positive">{outboundDeals} deals</div>
+                                            <div className="highlight-label">Direct Conversions</div>
+                                            <div className="highlight-value">{formatNumber(directConversions)}</div>
+                                            <div className="highlight-change positive">Total Count</div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Key Metrics Summary - Row 2 */}
+                                    <div className="performance-highlights">
+                                        <div className="highlight-card">
+                                            <div className="highlight-label">MRR Pipeline</div>
+                                            <div className="highlight-value">{formatCurrency(generatedMRR)}</div>
+                                            <div className="highlight-change positive">Generated MRR</div>
+                                        </div>
+                                        <div className="highlight-card">
+                                            <div className="highlight-label">Closed MRR</div>
+                                            <div className="highlight-value">{formatCurrency(closedMRR)}</div>
+                                            <div className="highlight-change positive">Won Revenue</div>
+                                        </div>
+                                        <div className="highlight-card">
+                                            <div className="highlight-label">Total Deals</div>
+                                            <div className="highlight-value">{formatNumber(totalDeals)}</div>
+                                            <div className="highlight-change">{formatNumber(totalDemos)} Demos</div>
+                                        </div>
+                                        <div className="highlight-card">
+                                            <div className="highlight-label">Cost Per Deal</div>
+                                            <div className="highlight-value">{formatCurrency(costPerDeal)}</div>
+                                            <div className="highlight-change">Efficiency</div>
                                         </div>
                                     </div>
 
@@ -3888,7 +3916,7 @@ Be direct and specific. No fluff.`;
                                             <div className="insight-card-content">
                                                 {totalDeals > 10 
                                                     ? `Strong deal generation with ${totalDeals} deals closed. Cost per deal is ${formatCurrency(costPerDeal)} with ${totalAccounts} accounts in pipeline.`
-                                                    : `${totalDeals} deals generated from ${totalDemos} demos. Consider optimizing targeting to improve demo-to-deal conversion rate of ${dealToDemoRate.toFixed(1)}%.`
+                                                    : `${totalDeals} deals generated from ${totalDemos} demos. Consider optimizing targeting to improve demo-to-deal conversion rate of ${demoToDealRate.toFixed(1)}%.`
                                                 }
                                             </div>
                                         </div>
@@ -3961,14 +3989,14 @@ Be direct and specific. No fluff.`;
                                         <div className="insight-card info">
                                             <div className="insight-card-header">
                                                 <div className="insight-card-icon">{Icons.activity}</div>
-                                                <div className="insight-card-title">Funnel Analysis</div>
+                                                <div className="insight-card-title">Conversion Funnel</div>
                                             </div>
-                                            <div className="insight-metric">{totalAccounts} → {totalDemos} → {totalDeals}</div>
+                                            <div className="insight-metric">{formatNumber(totalDemos)} → {formatNumber(totalDeals)} → {formatNumber(directConversions)}</div>
                                             <div className="insight-card-content">
-                                                Funnel progression: {totalAccounts} accounts → {totalDemos} demos ({demoToAccountRate.toFixed(0)}%) → {totalDeals} deals ({dealToDemoRate.toFixed(0)}%). 
-                                                {demoToAccountRate > 50 
-                                                    ? 'Strong account-to-demo conversion indicates good lead quality.'
-                                                    : 'Account-to-demo conversion could be improved with better follow-up sequences.'
+                                                Funnel progression: {formatNumber(totalDemos)} demos → {formatNumber(totalDeals)} deals ({demoToDealRate.toFixed(0)}%) → {formatNumber(directConversions)} customers ({dealToCustomerRate.toFixed(0)}%). 
+                                                {demoToDealRate > 30 
+                                                    ? 'Strong demo-to-deal conversion indicates effective sales process.'
+                                                    : 'Demo-to-deal conversion could be improved with better qualification.'
                                                 }
                                             </div>
                                         </div>
@@ -3998,7 +4026,7 @@ Be direct and specific. No fluff.`;
                                             <div className="recommendation-content">
                                                 <div className="recommendation-title">Optimize Demo-to-Deal Conversion</div>
                                                 <div className="recommendation-desc">
-                                                    Current conversion rate is {dealToDemoRate.toFixed(1)}%. Implement demo follow-up automation, 
+                                                    Current conversion rate is {demoToDealRate.toFixed(1)}%. Implement demo follow-up automation, 
                                                     improve sales deck, and consider offering limited-time incentives to boost conversions. 
                                                     Target: 40%+ conversion rate.
                                                 </div>
