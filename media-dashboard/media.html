@@ -1799,13 +1799,28 @@ Be direct and specific. No fluff.`;
 
                 // Parse team totals from TOTAL column (G = index 6)
                 const totalCol = 6;
+                const salesloftCallsTotal = parseValue(rows[1]?.[totalCol]);
+                const salesloftConnectedTotal = parseValue(rows[2]?.[totalCol]);
+                const aiCallsTotal = parseValue(rows[4]?.[totalCol]);
+                const aiCallsConnectedTotal = parseValue(rows[5]?.[totalCol]);
+                
+                // Calculate percentages - use sheet value if valid, otherwise calculate
+                const sheetSalesloftPct = rows[3]?.[totalCol];
+                const sheetAiPct = rows[6]?.[totalCol];
+                const calculatedSalesloftPct = salesloftCallsTotal > 0 
+                    ? ((salesloftConnectedTotal / salesloftCallsTotal) * 100).toFixed(1) + '%' 
+                    : '0%';
+                const calculatedAiPct = aiCallsTotal > 0 
+                    ? ((aiCallsConnectedTotal / aiCallsTotal) * 100).toFixed(1) + '%' 
+                    : '0%';
+                
                 const teamTotals = {
-                    salesloftCalls: parseValue(rows[1]?.[totalCol]),
-                    salesloftConnected: parseValue(rows[2]?.[totalCol]),
-                    salesloftConnectPercent: rows[3]?.[totalCol] || '0%',
-                    aiCalls: parseValue(rows[4]?.[totalCol]),
-                    aiCallsConnected: parseValue(rows[5]?.[totalCol]),
-                    aiCallsConnectPercent: rows[6]?.[totalCol] || '0%',
+                    salesloftCalls: salesloftCallsTotal,
+                    salesloftConnected: salesloftConnectedTotal,
+                    salesloftConnectPercent: (sheetSalesloftPct && sheetSalesloftPct !== '0%') ? sheetSalesloftPct : calculatedSalesloftPct,
+                    aiCalls: aiCallsTotal,
+                    aiCallsConnected: aiCallsConnectedTotal,
+                    aiCallsConnectPercent: (sheetAiPct && sheetAiPct !== '0%') ? sheetAiPct : calculatedAiPct,
                     totalDemos: parseValue(rows[7]?.[totalCol]),
                     totalDeals: parseValue(rows[8]?.[totalCol]),
                     dealsColdData: parseValue(rows[9]?.[totalCol]),
@@ -1819,15 +1834,30 @@ Be direct and specific. No fluff.`;
                 const SDR_NAMES = ['Akanksha', 'Vanshita', 'Samriddhi', 'Rashi', 'AI SDR'];
                 const sdrs = SDR_NAMES.map(name => {
                     const col = SDR_COLS[name];
+                    const sdrSalesloftCalls = parseValue(rows[1]?.[col]);
+                    const sdrSalesloftConnected = parseValue(rows[2]?.[col]);
+                    const sdrAiCalls = parseValue(rows[4]?.[col]);
+                    const sdrAiCallsConnected = parseValue(rows[5]?.[col]);
+                    
+                    // Calculate percentages - use sheet value if valid, otherwise calculate
+                    const sheetSdrSalesloftPct = rows[3]?.[col];
+                    const sheetSdrAiPct = rows[6]?.[col];
+                    const calcSdrSalesloftPct = sdrSalesloftCalls > 0 
+                        ? ((sdrSalesloftConnected / sdrSalesloftCalls) * 100).toFixed(1) + '%' 
+                        : '0%';
+                    const calcSdrAiPct = sdrAiCalls > 0 
+                        ? ((sdrAiCallsConnected / sdrAiCalls) * 100).toFixed(1) + '%' 
+                        : '0%';
+                    
                     return {
                         name,
                         color: SDR_COLORS[name],
-                        salesloftCalls: parseValue(rows[1]?.[col]),
-                        salesloftConnected: parseValue(rows[2]?.[col]),
-                        salesloftConnectPercent: rows[3]?.[col] || '0%',
-                        aiCalls: parseValue(rows[4]?.[col]),
-                        aiCallsConnected: parseValue(rows[5]?.[col]),
-                        aiCallsConnectPercent: rows[6]?.[col] || '0%',
+                        salesloftCalls: sdrSalesloftCalls,
+                        salesloftConnected: sdrSalesloftConnected,
+                        salesloftConnectPercent: (sheetSdrSalesloftPct && sheetSdrSalesloftPct !== '0%') ? sheetSdrSalesloftPct : calcSdrSalesloftPct,
+                        aiCalls: sdrAiCalls,
+                        aiCallsConnected: sdrAiCallsConnected,
+                        aiCallsConnectPercent: (sheetSdrAiPct && sheetSdrAiPct !== '0%') ? sheetSdrAiPct : calcSdrAiPct,
                         totalDemos: parseValue(rows[7]?.[col]),
                         totalDeals: parseValue(rows[8]?.[col]),
                         dealsColdData: parseValue(rows[9]?.[col]),
@@ -3386,8 +3416,16 @@ Be direct and specific. No fluff.`;
                                 ];
                                 const sdrs = currentData.sdrs && currentData.sdrs.length > 0 
                                     ? currentData.sdrs 
-                                    : SDR_DEFAULTS.map(s => ({ ...s, salesloftCalls: 0, salesloftConnected: 0, aiCalls: 0, aiCallsConnected: 0, totalDemos: 0, totalDeals: 0, mrrPipeline: 0, closedMRR: 0, weeklyData: [] }));
+                                    : SDR_DEFAULTS.map(s => ({ ...s, salesloftCalls: 0, salesloftConnected: 0, aiCalls: 0, aiCallsConnected: 0, totalDemos: 0, totalDeals: 0, mrrPipeline: 0, closedMRR: 0, weeklyData: [], salesloftConnectPercent: '0%', aiCallsConnectPercent: '0%' }));
                                 const teamTotals = currentData.teamTotals || { salesloftCalls: 0, salesloftConnected: 0, aiCalls: 0, aiCallsConnected: 0, totalDemos: 0, totalDeals: 0, mrrPipeline: 0, closedMRR: 0, salesloftConnectPercent: '0%', aiCallsConnectPercent: '0%', dealsColdData: 0, dealsMQLs: 0 };
+                                
+                                // Calculate additional metrics
+                                const totalCalls = teamTotals.salesloftCalls + teamTotals.aiCalls;
+                                const totalConnected = teamTotals.salesloftConnected + teamTotals.aiCallsConnected;
+                                const overallConnectRate = totalCalls > 0 ? ((totalConnected / totalCalls) * 100).toFixed(1) : 0;
+                                const demoToDealRate = teamTotals.totalDemos > 0 ? ((teamTotals.totalDeals / teamTotals.totalDemos) * 100).toFixed(1) : 0;
+                                const callsToDemoRate = totalCalls > 0 ? ((teamTotals.totalDemos / totalCalls) * 100).toFixed(1) : 0;
+                                const avgMRRPerDeal = teamTotals.totalDeals > 0 ? teamTotals.closedMRR / teamTotals.totalDeals : 0;
                                 
                                 return (
                                 <>
@@ -3411,11 +3449,20 @@ Be direct and specific. No fluff.`;
                                         <div className="outbound-stat-sub">{formatNumber(teamTotals.aiCallsConnected)} connected ({teamTotals.aiCallsConnectPercent})</div>
                                     </div>
                                     <div className="outbound-stat-card">
+                                        <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'}}>{Icons.activity}</div>
+                                        <div className="outbound-stat-content">
+                                            <div className="outbound-stat-value">{formatNumber(totalCalls)}</div>
+                                            <div className="outbound-stat-label">Total Calls</div>
+                                        </div>
+                                        <div className="outbound-stat-sub">{formatNumber(totalConnected)} connected ({overallConnectRate}%)</div>
+                                    </div>
+                                    <div className="outbound-stat-card">
                                         <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'}}>{Icons.target}</div>
                                         <div className="outbound-stat-content">
                                             <div className="outbound-stat-value">{formatNumber(teamTotals.totalDemos)}</div>
                                             <div className="outbound-stat-label">Total Demos</div>
                                         </div>
+                                        <div className="outbound-stat-sub">{callsToDemoRate}% calls to demo rate</div>
                                     </div>
                                     <div className="outbound-stat-card">
                                         <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)'}}>{Icons.check}</div>
@@ -3423,7 +3470,7 @@ Be direct and specific. No fluff.`;
                                             <div className="outbound-stat-value">{formatNumber(teamTotals.totalDeals)}</div>
                                             <div className="outbound-stat-label">Total Deals</div>
                                         </div>
-                                        <div className="outbound-stat-sub">Cold: {formatNumber(teamTotals.dealsColdData)} | MQLs: {formatNumber(teamTotals.dealsMQLs)}</div>
+                                        <div className="outbound-stat-sub">{demoToDealRate}% demo to deal | Cold: {formatNumber(teamTotals.dealsColdData)} | MQL: {formatNumber(teamTotals.dealsMQLs)}</div>
                                     </div>
                                     <div className="outbound-stat-card">
                                         <div className="outbound-stat-icon" style={{background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'}}>{Icons.dollar}</div>
@@ -3438,6 +3485,7 @@ Be direct and specific. No fluff.`;
                                             <div className="outbound-stat-value">{formatCurrency(teamTotals.closedMRR)}</div>
                                             <div className="outbound-stat-label">Closed MRR</div>
                                         </div>
+                                        <div className="outbound-stat-sub">{formatCurrency(avgMRRPerDeal)} avg per deal</div>
                                     </div>
                                 </div>
 
