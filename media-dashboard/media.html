@@ -2577,15 +2577,30 @@ Be direct and specific. No fluff.`;
                         }
                     });
                 });
+                
+                // Recalculate connect percentages for aggregated SDRs
+                Object.values(sdrMap).forEach(sdr => {
+                    sdr.salesloftConnectPercent = sdr.salesloftCalls > 0 
+                        ? ((sdr.salesloftConnected / sdr.salesloftCalls) * 100).toFixed(1) + '%' 
+                        : '0%';
+                    sdr.aiCallsConnectPercent = sdr.aiCalls > 0 
+                        ? ((sdr.aiCallsConnected / sdr.aiCalls) * 100).toFixed(1) + '%' 
+                        : '0%';
+                });
 
                 // Aggregate teamTotals for Outbound pod
+                const salesloftCalls = allMonths.reduce((sum, m) => sum + (m.teamTotals?.salesloftCalls || 0), 0);
+                const salesloftConnected = allMonths.reduce((sum, m) => sum + (m.teamTotals?.salesloftConnected || 0), 0);
+                const aiCalls = allMonths.reduce((sum, m) => sum + (m.teamTotals?.aiCalls || 0), 0);
+                const aiCallsConnected = allMonths.reduce((sum, m) => sum + (m.teamTotals?.aiCallsConnected || 0), 0);
+                
                 const teamTotals = {
-                    salesloftCalls: allMonths.reduce((sum, m) => sum + (m.teamTotals?.salesloftCalls || 0), 0),
-                    salesloftConnected: allMonths.reduce((sum, m) => sum + (m.teamTotals?.salesloftConnected || 0), 0),
-                    salesloftConnectPercent: '0%',
-                    aiCalls: allMonths.reduce((sum, m) => sum + (m.teamTotals?.aiCalls || 0), 0),
-                    aiCallsConnected: allMonths.reduce((sum, m) => sum + (m.teamTotals?.aiCallsConnected || 0), 0),
-                    aiCallsConnectPercent: '0%',
+                    salesloftCalls,
+                    salesloftConnected,
+                    salesloftConnectPercent: salesloftCalls > 0 ? ((salesloftConnected / salesloftCalls) * 100).toFixed(1) + '%' : '0%',
+                    aiCalls,
+                    aiCallsConnected,
+                    aiCallsConnectPercent: aiCalls > 0 ? ((aiCallsConnected / aiCalls) * 100).toFixed(1) + '%' : '0%',
                     totalDemos: allMonths.reduce((sum, m) => sum + (m.teamTotals?.totalDemos || 0), 0),
                     totalDeals: allMonths.reduce((sum, m) => sum + (m.teamTotals?.totalDeals || 0), 0),
                     dealsColdData: allMonths.reduce((sum, m) => sum + (m.teamTotals?.dealsColdData || 0), 0),
